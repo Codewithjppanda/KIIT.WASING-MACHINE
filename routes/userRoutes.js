@@ -6,6 +6,12 @@ const {
     getAllMachines,
     getMachinesWithStatus
 } = require('../controllers/machineController');
+const { startMachine } = require('../controllers/bookingController');
+const { getRemainingWashes } = require('../controllers/userController');
+
+router.get('/washes-left', getRemainingWashes);
+
+router.post('/start/:machineId', startMachine);
 
 // Route definitions
 router.post('/register', registerUser);

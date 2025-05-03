@@ -76,3 +76,19 @@ exports.loginUser = async (req, res) => {
         res.status(500).json({ message: 'Server error during login' });
     }
 };
+exports.getRemainingWashes = async (req, res) => {
+    try {
+        const token = req.headers.authorization?.split(' ')[1];
+        if (!token) return res.status(401).json({ message: 'Token missing' });
+
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const user = await User.findByPk(decoded.id);
+
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        return res.status(200).json({ washesLeft: user.washesLeft });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error retrieving wash count' });
+    }
+};
