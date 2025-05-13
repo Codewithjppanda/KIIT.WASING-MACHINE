@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { API_BASE_URL } from "@/lib/api";
 
-export default function NewPassword() {
+function NewPasswordForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [newPassword, setNewPassword] = useState("");
@@ -115,5 +115,13 @@ export default function NewPassword() {
         </form>
       </div>
     </div>
+  );
+}
+
+export default function NewPassword() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-black"><div className="text-white">Loading...</div></div>}>
+      <NewPasswordForm />
+    </Suspense>
   );
 } 

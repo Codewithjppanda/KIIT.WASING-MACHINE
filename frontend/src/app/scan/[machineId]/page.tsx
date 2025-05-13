@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { BackgroundLines } from "@/components/ui/background-lines";
 import { IconScan, IconLoader2 } from "@tabler/icons-react";
@@ -24,7 +24,8 @@ export default function ScanPage() {
     }
   }, [router]);
 
-  const startMachine = async (qrCode: string) => {
+  // Wrap startMachine in useCallback to prevent recreation on each render
+  const startMachine = useCallback(async (qrCode: string) => {
     setBookingStatus("loading");
     
     try {
@@ -58,7 +59,7 @@ export default function ScanPage() {
       setBookingStatus("error");
       setErrorMessage("Network error. Please try again.");
     }
-  };
+  }, [machineId, router]);
 
   useEffect(() => {
     if (scannerRef.current) {
