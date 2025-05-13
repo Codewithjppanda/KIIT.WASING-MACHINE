@@ -7,9 +7,6 @@ import dynamic from "next/dynamic";
 import { IconScan, IconLoader2 } from "@tabler/icons-react";
 import { Html5Qrcode } from 'html5-qrcode';
 
-// Dynamically import QR scanner component to avoid SSR issues
-const QrReader = dynamic(() => import('react-qr-reader').then(mod => mod.QrReader), { ssr: false });
-
 export default function ScanPage() {
   const router = useRouter();
   const params = useParams();
