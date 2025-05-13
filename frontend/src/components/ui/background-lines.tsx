@@ -1,31 +1,28 @@
 "use client";
+import React, { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { motion } from "motion/react";
-import React from "react";
 
-export const BackgroundLines = ({
+export function BackgroundLines({
   children,
   className,
-  svgOptions,
+  svgOptions = {},
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
   className?: string;
   svgOptions?: {
     duration?: number;
   };
-}) => {
+}) {
   return (
-    <div
-      className={cn(
-        "h-[20rem] md:h-screen w-full bg-white dark:bg-black",
-        className
-      )}
-    >
-      <SVG svgOptions={svgOptions} />
+    <div className={cn("relative overflow-hidden", className)}>
+      <div className="pointer-events-none absolute inset-0 z-10">
+        <SVG svgOptions={svgOptions} />
+      </div>
       {children}
     </div>
   );
-};
+}
 
 const pathVariants = {
   initial: { strokeDashoffset: 800, strokeDasharray: "50 800" },

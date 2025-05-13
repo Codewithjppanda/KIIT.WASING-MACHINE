@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { BackgroundLines } from "@/components/ui/background-lines";
-import dynamic from "next/dynamic";
 import { IconScan, IconLoader2 } from "@tabler/icons-react";
 import { Html5Qrcode } from 'html5-qrcode';
 

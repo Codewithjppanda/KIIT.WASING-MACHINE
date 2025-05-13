@@ -7,7 +7,7 @@ import { SessionProvider } from "next-auth/react";
 export default function LoginPage() {
   return (
     <SessionProvider>
-      <div className="min-h-screen relative overflow-hidden">
+      <div className="min-h-screen relative overflow-hidden bg-black">
         <BackgroundLines className="absolute inset-0 z-0">
           <div />
         </BackgroundLines>
