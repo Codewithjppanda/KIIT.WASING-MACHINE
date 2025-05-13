@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { BackgroundLines } from "@/components/ui/background-lines";
 import dynamic from "next/dynamic";
 import { IconScan, IconLoader2 } from "@tabler/icons-react";
+import { Html5Qrcode } from 'html5-qrcode';
 
 // Dynamically import QR scanner component to avoid SSR issues
 const QrReader = dynamic(() => import('react-qr-reader').then(mod => mod.QrReader), { ssr: false });
@@ -17,6 +18,7 @@ export default function ScanPage() {
   const [scanning, setScanning] = useState(false);
   const [bookingStatus, setBookingStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState("");
+  const scannerRef = useRef(null);
 
   useEffect(() => {
     // Check authentication
@@ -62,6 +64,29 @@ export default function ScanPage() {
     }
   };
 
+  useEffect(() => {
+    if (scannerRef.current) {
+      const scanner = new Html5Qrcode("reader");
+      
+      scanner.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: 250 },
+        (decodedText) => {
+          setScanning(false);
+          startMachine(decodedText);
+          scanner.stop();
+        },
+        (errorMessage) => {
+          console.warn(`QR error: ${errorMessage}`);
+        }
+      );
+      
+      return () => {
+        scanner.stop().catch(console.error);
+      };
+    }
+  }, [startMachine]);
+
   return (
     <div className="min-h-screen relative overflow-hidden bg-black">
       <BackgroundLines className="absolute inset-0 z-0">
@@ -91,19 +116,7 @@ export default function ScanPage() {
           
           {scanning && (
             <div className="mb-4">
-              <QrReader
-                constraints={{ facingMode: 'environment' }}
-                onResult={(result, error) => {
-                  if (result) {
-                    setScanning(false);
-                    startMachine(result.getText());
-                  }
-                  if (error) {
-                    console.error(error);
-                  }
-                }}
-                containerStyle={{ width: '100%' }}
-              />
+              <div id="reader" ref={scannerRef} style={{ width: '100%', maxWidth: '500px' }} />
               <button
                 onClick={() => setScanning(false)}
                 className="mt-4 w-full py-2 bg-zinc-700 hover:bg-zinc-600 text-white rounded-md"
