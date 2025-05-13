@@ -26,15 +26,9 @@ export default function HomePage() {
           <div className="flex items-center gap-4">
             <button 
               onClick={() => router.push('/login')}
-              className="px-4 py-2 text-zinc-300 hover:text-white transition-colors"
-            >
-              Login
-            </button>
-            <button 
-              onClick={() => router.push('/register')}
               className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg text-white hover:opacity-90 transition-opacity"
             >
-              Register
+              Sign in with KIIT Email
             </button>
           </div>
         </div>
@@ -57,16 +51,10 @@ export default function HomePage() {
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <HoverButton 
-              onClick={() => router.push('/register')}
+              onClick={() => router.push('/login')}
               className="bg-gradient-to-r from-blue-600 to-purple-600"
             >
-              Get Started
-            </HoverButton>
-            <HoverButton 
-              onClick={() => router.push('/login')}
-              className="bg-zinc-800 text-zinc-300 hover:text-white"
-            >
-              Already a User? Login
+              Sign in with KIIT Email
             </HoverButton>
           </div>
         </motion.div>

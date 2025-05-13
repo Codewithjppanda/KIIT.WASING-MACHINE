@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { useSession } from "next-auth/react";
+import { useSession, SessionProvider } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
-export default function VerifyPassword() {
+function VerifyPasswordContent() {
   const { data: session } = useSession();
   const router = useRouter();
   const [password, setPassword] = useState("");
@@ -16,7 +16,10 @@ export default function VerifyPassword() {
     setIsLoading(true);
     
     try {
-      const response = await fetch("http://localhost:5000/api/users/verify-password", {
+      console.log("Sending verification request for email:", session?.user?.email);
+      
+      // Use the login endpoint instead of verify-password
+      const response = await fetch("http://localhost:5000/api/users/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -24,6 +27,17 @@ export default function VerifyPassword() {
           password: password
         }),
       });
+      
+      // Log the full URL and response status for debugging
+      console.log("Response status:", response.status);
+      
+      // Handle non-JSON responses
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        console.error("Non-JSON response received:", contentType);
+        setError("Server returned an invalid response format. Please try again later.");
+        return;
+      }
       
       const data = await response.json();
       
@@ -36,10 +50,11 @@ export default function VerifyPassword() {
         
         router.push("/dashboard");
       } else {
-        setError("Invalid password");
+        setError(data.message || "Invalid password");
       }
     } catch (error) {
-      setError("An error occurred. Please try again.");
+      console.error("Verification error:", error);
+      setError("Server error or endpoint not found. Please try again later.");
     } finally {
       setIsLoading(false);
     }
@@ -76,7 +91,24 @@ export default function VerifyPassword() {
             {isLoading ? "Verifying..." : "Continue"}
           </button>
         </form>
+        
+        <div className="mt-4 text-center">
+          <button
+            onClick={() => router.push('/reset-password')}
+            className="text-blue-400 hover:underline text-sm"
+          >
+            Forgot your password?
+          </button>
+        </div>
       </div>
     </div>
+  );
+}
+
+export default function VerifyPassword() {
+  return (
+    <SessionProvider>
+      <VerifyPasswordContent />
+    </SessionProvider>
   );
 } 

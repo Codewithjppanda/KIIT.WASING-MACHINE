@@ -119,9 +119,9 @@ export default function MachinesPage() {
     router.push(`/scan/${machineId}`);
   };
 
-  // Filter to show only vacant machines on the user's floor
+  // Filter to show only vacant machines (all floors can access any machine on their designated day)
   const availableMachines = machines.filter(
-    machine => machine.status === 'vacant' && machine.floor === userFloor
+    machine => machine.status === 'vacant'
   );
 
   // Modify canFloorBookToday to also check if tomorrow is a booking day
@@ -307,7 +307,7 @@ export default function MachinesPage() {
             {machines.length === 0 ? (
               <p className="text-white">No machines found. Check back later.</p>
             ) : (
-              <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2">
                 {machines.map(machine => (
                   <div 
                     key={machine.id}
@@ -322,7 +322,7 @@ export default function MachinesPage() {
                     {machine.name}: {machine.status.charAt(0).toUpperCase() + machine.status.slice(1)}
                   </div>
                 ))}
-              </div>
+            </div>
             )}
           </div>
         </div>
