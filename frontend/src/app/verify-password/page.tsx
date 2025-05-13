@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useSession, SessionProvider } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { API_BASE_URL } from "@/lib/api";
 
 function VerifyPasswordContent() {
   const { data: session } = useSession();
@@ -19,7 +20,7 @@ function VerifyPasswordContent() {
       console.log("Sending verification request for email:", session?.user?.email);
       
       // Use the login endpoint instead of verify-password
-      const response = await fetch("http://localhost:5000/api/users/login", {
+      const response = await fetch(`${API_BASE_URL}/api/users/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

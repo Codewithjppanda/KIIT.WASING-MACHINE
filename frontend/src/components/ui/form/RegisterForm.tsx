@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { IconBrandGoogle } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
+import { API_BASE_URL } from "@/lib/api";
 
 const schema = z.object({
   firstname: z.string().min(1, "First name is required"),
@@ -34,7 +35,7 @@ export function RegisterForm() {
 
   const onSubmit = async (data: FormData) => {
     try {
-      const response = await fetch("http://localhost:5000/api/users/register", {
+      const response = await fetch(`${API_BASE_URL}/api/users/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

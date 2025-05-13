@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { BackgroundLines } from "@/components/ui/background-lines";
+import { API_BASE_URL } from "@/lib/api";
 
 type Machine = {
   id: string;
@@ -56,7 +57,7 @@ export default function MachinesPage() {
     const fetchMachines = async () => {
       try {
         // Fetch machines
-        const machinesResponse = await fetch("http://localhost:5000/api/users/machines/status", {
+        const machinesResponse = await fetch(`${API_BASE_URL}/api/users/machines/status`, {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
         });
         

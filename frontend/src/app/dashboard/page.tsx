@@ -12,6 +12,7 @@ import {
 } from "@tabler/icons-react";
 import { motion } from "motion/react";
 import { signOut } from "next-auth/react";
+import { API_BASE_URL } from "@/lib/api";
 
 // Define a user type at the top of your file
 type User = {
@@ -55,7 +56,7 @@ export default function DashboardPage() {
           throw new Error("No token found");
         }
         
-        const response = await fetch("http://localhost:5000/api/users/washes-left", {
+        const response = await fetch(`${API_BASE_URL}/api/users/washes-left`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         

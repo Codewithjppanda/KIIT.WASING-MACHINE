@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { API_BASE_URL } from "@/lib/api";
 
 export default function NewPassword() {
   const router = useRouter();
@@ -37,7 +38,7 @@ export default function NewPassword() {
     setError("");
     
     try {
-      const response = await fetch("http://localhost:5000/api/users/reset-password", {
+      const response = await fetch(`${API_BASE_URL}/api/users/reset-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useSession, SessionProvider } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { API_BASE_URL } from "@/lib/api";
 
 function CompleteRegistrationContent() {
   const { data: session } = useSession();
@@ -29,7 +30,7 @@ function CompleteRegistrationContent() {
     setIsLoading(true);
     
     try {
-      const response = await fetch("http://localhost:5000/api/users/register", {
+      const response = await fetch(`${API_BASE_URL}/api/users/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
