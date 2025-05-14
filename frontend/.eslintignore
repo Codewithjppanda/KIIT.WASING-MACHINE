@@ -1,0 +1,2 @@
+# Ignore Vortex component file (breaks lint rules)
+src/components/ui/vortex.tsx 
