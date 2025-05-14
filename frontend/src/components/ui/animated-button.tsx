@@ -2,7 +2,7 @@
 
 import React from "react";
 import { cn } from "@/lib/utils";
-import { motion } from "framer-motion";
+import { motion, HTMLMotionProps } from "framer-motion";
 
 interface AnimatedButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   children: React.ReactNode;
@@ -17,7 +17,7 @@ export const AnimatedButton = ({
   variant = "primary",
   size = "default",
   ...props
-}: AnimatedButtonProps) => {
+}: AnimatedButtonProps & HTMLMotionProps<"button">) => {
   const variants = {
     primary: "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg shadow-blue-500/25",
     secondary: "bg-zinc-800 text-white hover:bg-zinc-700 shadow-lg shadow-zinc-900/25",
