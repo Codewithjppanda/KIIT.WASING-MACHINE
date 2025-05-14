@@ -1,7 +1,7 @@
 "use client";
 import React, { ReactNode } from "react";
 import { cn } from "@/lib/utils";
-import { motion } from "motion/react";
+import { motion } from "framer-motion";
 
 export function BackgroundLines({
   children,
