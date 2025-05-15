@@ -13,12 +13,17 @@ function AuthRedirectContent() {
 
   useEffect(() => {
     async function checkUserExists() {
-      if (!session?.user?.email) return;
+      const email = session?.user?.email;
+      if (!email) return;
+      console.log(
+        'AuthRedirect: fetching →',
+        `${API_BASE_URL}/api/users/check-email?email=${encodeURIComponent(email)}`
+      );
       
       try {
         // Check if user exists in the database
         const response = await fetch(
-          `${API_BASE_URL}/api/users/check-email?email=${encodeURIComponent(session.user.email)}`
+          `${API_BASE_URL}/api/users/check-email?email=${encodeURIComponent(email)}`
         );
         
         if (!response.ok) {
