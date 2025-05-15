@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useSession, SessionProvider } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { API_BASE_URL } from "@/lib/api";
 
 function AuthRedirectContent() {
   const { data: session, status } = useSession();
@@ -17,7 +18,7 @@ function AuthRedirectContent() {
       try {
         // Check if user exists in the database
         const response = await fetch(
-          `http://localhost:5000/api/users/check-email?email=${session.user.email}`
+          `${API_BASE_URL}/api/users/check-email?email=${encodeURIComponent(session.user.email)}`
         );
         
         if (!response.ok) {
