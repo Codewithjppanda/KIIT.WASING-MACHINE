@@ -146,24 +146,49 @@ exports.startMachine = async (req, res) => {
 
         const now = new Date();
 
+        // Find ANY booking for this user on this machine for today
         const booking = await Booking.findOne({
             where: {
                 userId,
                 machineId,
-                startTime: { [Op.lte]: now },
-                endTime: { [Op.gte]: now }
-            }
+                // Allow scanning 10 min before booking starts
+                startTime: { 
+                    [Op.between]: [
+                        new Date(now.getTime() - 10 * 60 * 1000), // 10 min before now
+                        new Date(now.getTime() + 60 * 60 * 1000)  // 1 hour after now
+                    ]
+                }
+            },
+            order: [['startTime', 'ASC']] // Get the soonest booking
         });
 
         if (!booking) {
-            return res.status(403).json({ message: 'No valid booking found for this machine and time' });
+            return res.status(403).json({ 
+                message: 'No upcoming booking found for this machine. Please make a booking first.' 
+            });
         }
 
-        // Optional: Update booking to "started" if needed
+        // Update the booking status
         booking.status = 'In Progress';
         await booking.save();
 
-        res.status(200).json({ message: 'Machine timer started successfully' });
+        // Update machine status to "Washing"
+        await Machine.update(
+            { status: 'Washing' },
+            { where: { id: machineId } }
+        );
+
+        // Calculate when washing ends
+        const washEndTime = new Date(booking.startTime.getTime() + 45 * 60 * 1000); // 45 min wash
+        
+        res.status(200).json({ 
+            message: 'Machine started successfully!',
+            booking: {
+                startTime: booking.startTime,
+                washEndTime: washEndTime,
+                endTime: booking.endTime
+            }
+        });
 
     } catch (error) {
         console.error(error);

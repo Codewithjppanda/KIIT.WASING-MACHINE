@@ -5,6 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import { BackgroundLines } from "@/components/ui/background-lines";
 import { IconScan, IconLoader2 } from "@tabler/icons-react";
 import { Html5Qrcode } from 'html5-qrcode';
+import { API_BASE_URL } from "@/lib/api";
 
 export default function ScanPage() {
   const router = useRouter();
@@ -25,30 +26,26 @@ export default function ScanPage() {
   }, [router]);
 
   // Wrap startMachine in useCallback to prevent recreation on each render
-  const startMachine = useCallback(async (qrCode: string) => {
+  const startMachine = useCallback(async () => {
     setBookingStatus("loading");
     
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("http://localhost:5000/api/start-machine", {
-        method: "POST",
+      const response = await fetch(`${API_BASE_URL}/api/users/start/${machineId}`, {
+        method: "POST", 
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          machineId,
-          qrCode
-        })
+        }
       });
       
       const data = await response.json();
       
       if (response.ok) {
         setBookingStatus("success");
-        // Redirect to confirmation page after 2 seconds
+        // Redirect to dashboard after 2 seconds
         setTimeout(() => {
-          router.push("/booking-confirmation");
+          router.push("/dashboard");
         }, 2000);
       } else {
         setBookingStatus("error");
@@ -68,9 +65,10 @@ export default function ScanPage() {
       scanner.start(
         { facingMode: "environment" },
         { fps: 10, qrbox: 250 },
-        (decodedText) => {
+        () => {
+          // QR code detected successfully, no need to use the text
           setScanning(false);
-          startMachine(decodedText);
+          startMachine();
           scanner.stop();
         },
         (errorMessage) => {
@@ -137,7 +135,7 @@ export default function ScanPage() {
               </svg>
               <h3 className="text-xl font-medium text-white mt-4">Success!</h3>
               <p className="text-green-300 mt-2">Machine started successfully</p>
-              <p className="text-neutral-400 mt-4">Redirecting to confirmation page...</p>
+              <p className="text-neutral-400 mt-4">Redirecting to dashboard...</p>
             </div>
           )}
           

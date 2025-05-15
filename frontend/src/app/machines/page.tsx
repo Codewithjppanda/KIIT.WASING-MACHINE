@@ -32,6 +32,7 @@ export default function MachinesPage() {
   const [loading, setLoading] = useState(true);
   const [userFloor, setUserFloor] = useState("");
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<TimeSlot | null>(null);
+  const [booking, setBooking] = useState<{ machine: string; startTime: Date; endTime: Date } | null>(null);
 
   const mapStatusToUI = (status: string) => {
     // Map backend status to frontend status
@@ -103,6 +104,13 @@ export default function MachinesPage() {
     };
 
     fetchMachines();
+    // Load existing booking from localStorage
+    const bm = localStorage.getItem("bookingMachineId");
+    const bs = localStorage.getItem("bookingStartTime");
+    const be = localStorage.getItem("bookingEndTime");
+    if (bm && bs && be) {
+      setBooking({ machine: bm, startTime: new Date(bs), endTime: new Date(be) });
+    }
   }, [router]);
 
   const handleBookMachine = (machineId: string, startTime: Date, endTime: Date) => {
@@ -110,14 +118,12 @@ export default function MachinesPage() {
       alert("Please select a time slot");
       return;
     }
-    
-    // Store booking details in localStorage or state
+    // Store booking details
     localStorage.setItem("bookingMachineId", machineId);
     localStorage.setItem("bookingStartTime", startTime.toISOString());
     localStorage.setItem("bookingEndTime", endTime.toISOString());
-    
-    // Navigate to scan page
-    router.push(`/scan/${machineId}`);
+    setBooking({ machine: machineId, startTime, endTime });
+    alert(`Machine booked for ${startTime.toLocaleString()} - ${endTime.toLocaleString()}. You can scan when your slot starts.`);
   };
 
   // Filter to show only vacant machines (all floors can access any machine on their designated day)
@@ -243,63 +249,89 @@ export default function MachinesPage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {availableMachines.map(machine => (
-                <div key={machine.id} className="bg-zinc-900/80 rounded-xl p-6 border border-green-500/20">
-                  <div className="flex items-center mb-4">
-                    <div className="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
-                    <h3 className="text-white font-medium">{machine.name}</h3>
-                  </div>
-                  <p className="text-neutral-400 mb-4">Status: Available</p>
-                  
-                  {/* Time Slot Selection Dropdown */}
-                  <div className="mb-4">
-                    <label htmlFor={`timeSlot-${machine.id}`} className="text-white mb-2 block">
-                      Select a time slot:
-                    </label>
-                    {getAvailableTimeSlots().length > 0 ? (
-                      <select
-                        id={`timeSlot-${machine.id}`}
-                        onChange={(e) => {
-                          const slotId = parseInt(e.target.value);
-                          const slot = getAvailableTimeSlots().find(s => s.id === slotId);
-                          if (slot) {
-                            setSelectedTimeSlot({ machine: machine.id, slot });
-                          }
-                        }}
-                        value={selectedTimeSlot?.machine === machine.id ? selectedTimeSlot.slot.id : ""}
-                        className="w-full p-2 rounded-md bg-zinc-800 text-white border-none focus:ring-2 focus:ring-blue-500"
-                      >
-                        <option value="" disabled>Choose a time</option>
-                        {getAvailableTimeSlots().map(slot => (
-                          <option key={slot.id} value={slot.id}>
-                            {slot.label}
-                          </option>
-                        ))}
-                      </select>
-                    ) : (
-                      <div className="p-3 bg-yellow-500/20 text-yellow-400 text-sm rounded-lg">
-                        {!canFloorBookToday(userFloor).canBook ? 
-                          `Your floor (${userFloor}) can only book on ${getAllowedDays(userFloor)}` : 
-                          "No time slots available for today. Slots open at 6 PM the day before."
-                        }
+              {availableMachines.map(machine => {
+                if (booking?.machine === machine.id) {
+                  const now = new Date();
+                  const start = booking.startTime;
+                  const end = booking.endTime;
+                  const scanWindow = new Date(start.getTime() - 10 * 60000);
+                  const canScan = now >= scanWindow && now <= end;
+                  return (
+                    <div key={machine.id} className="bg-zinc-900/80 rounded-xl p-6 border border-green-500/20">
+                      <div className="flex items-center mb-4">
+                        <div className="w-3 h-3 rounded-full bg-blue-500 mr-2"></div>
+                        <h3 className="text-white font-medium">{machine.name}</h3>
                       </div>
-                    )}
+                      <p className="text-neutral-400 mb-4">Booked for {start.toLocaleDateString()}, {start.toLocaleTimeString()} - {end.toLocaleTimeString()}</p>
+                      <button
+                        onClick={() => router.push(`/scan/${machine.id}`)}
+                        disabled={!canScan}
+                        className={`w-full py-2 ${canScan ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-600/50 cursor-not-allowed'} text-white rounded-md transition-colors`}
+                      >
+                        Scan Now
+                      </button>
+                    </div>
+                  );
+                }
+                // Booking not for this machine: show time slot and Book Now
+                return (
+                  <div key={machine.id} className="bg-zinc-900/80 rounded-xl p-6 border border-green-500/20">
+                    <div className="flex items-center mb-4">
+                      <div className="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
+                      <h3 className="text-white font-medium">{machine.name}</h3>
+                    </div>
+                    <p className="text-neutral-400 mb-4">Status: Available</p>
+                    
+                    {/* Time Slot Selection Dropdown */}
+                    <div className="mb-4">
+                      <label htmlFor={`timeSlot-${machine.id}`} className="text-white mb-2 block">
+                        Select a time slot:
+                      </label>
+                      {getAvailableTimeSlots().length > 0 ? (
+                        <select
+                          id={`timeSlot-${machine.id}`}
+                          onChange={(e) => {
+                            const slotId = parseInt(e.target.value);
+                            const slot = getAvailableTimeSlots().find(s => s.id === slotId);
+                            if (slot) {
+                              setSelectedTimeSlot({ machine: machine.id, slot });
+                            }
+                          }}
+                          value={selectedTimeSlot?.machine === machine.id ? selectedTimeSlot.slot.id : ""}
+                          className="w-full p-2 rounded-md bg-zinc-800 text-white border-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="" disabled>Choose a time</option>
+                          {getAvailableTimeSlots().map(slot => (
+                            <option key={slot.id} value={slot.id}>
+                              {slot.label}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <div className="p-3 bg-yellow-500/20 text-yellow-400 text-sm rounded-lg">
+                          {!canFloorBookToday(userFloor).canBook ? 
+                            `Your floor (${userFloor}) can only book on ${getAllowedDays(userFloor)}` : 
+                            "No time slots available for today. Slots open at 6 PM the day before."
+                          }
+                        </div>
+                      )}
+                    </div>
+                    
+                    <button
+                      onClick={() => {
+                        if (selectedTimeSlot?.machine === machine.id) {
+                          handleBookMachine(machine.id, selectedTimeSlot.slot.startTime, selectedTimeSlot.slot.endTime);
+                        } else {
+                          alert("Please select a time slot first");
+                        }
+                      }}
+                      className="w-full py-2 bg-green-600 hover:bg-green-700 text-white rounded-md transition-colors"
+                    >
+                      Book Now
+                    </button>
                   </div>
-                  
-                  <button
-                    onClick={() => {
-                      if (selectedTimeSlot?.machine === machine.id) {
-                        handleBookMachine(machine.id, selectedTimeSlot.slot.startTime, selectedTimeSlot.slot.endTime);
-                      } else {
-                        alert("Please select a time slot first");
-                      }
-                    }}
-                    className="w-full py-2 bg-green-600 hover:bg-green-700 text-white rounded-md transition-colors"
-                  >
-                    Book & Scan
-                  </button>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
           

@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { IconBrandGoogle } from "@tabler/icons-react";
 import { signIn, useSession } from "next-auth/react";
+import { AnimatedButton } from "@/components/ui/animated-button";
 
 export function LoginForm() {
   const { status } = useSession();
@@ -42,16 +43,17 @@ export function LoginForm() {
         </div>
       )}
 
-      <button
+      <AnimatedButton
         onClick={handleGoogleSignIn}
         disabled={isLoading || status === "loading"}
-        className="group relative flex h-12 w-full items-center justify-center space-x-2 rounded-lg bg-white/10 px-4 hover:bg-white/20 transition-all disabled:opacity-50"
+        variant="primary"
+        className="group relative flex h-12 w-full items-center justify-center space-x-2 rounded-full bg-white/10 px-4 hover:bg-white/20 transition-all disabled:opacity-50"
       >
-        <IconBrandGoogle className="h-5 w-5 text-white" />
-        <span className="text-white font-medium">
+        <IconBrandGoogle className="h-5 w-5" />
+        <span>
           {isLoading || status === "loading" ? "Signing in..." : "Sign in with KIIT Email"}
         </span>
-      </button>
+      </AnimatedButton>
 
       <div className="mt-6 text-center">
         <p className="text-gray-400 text-sm">

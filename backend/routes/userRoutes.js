@@ -29,4 +29,9 @@ router.post('/verify-password', verifyPassword);
 router.post('/request-reset', requestPasswordReset);
 router.post('/reset-password', resetPassword);
 
+// DEBUG: tell me which DB I'm using
+router.get('/dbinfo', (req, res) => {
+  res.json({ host: process.env.DB_HOST, database: process.env.DB_NAME });
+});
+
 module.exports = router;

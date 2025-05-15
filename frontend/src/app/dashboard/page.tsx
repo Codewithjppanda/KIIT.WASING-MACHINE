@@ -8,7 +8,10 @@ import {
   IconHistory, 
   IconAlertCircle,
   IconLoader2,
-  IconLogout 
+  IconLogout,
+  IconCalendarEvent,
+  IconQrcode,
+  IconEye
 } from "@tabler/icons-react";
 import { motion } from "framer-motion";
 import { signOut } from "next-auth/react";
@@ -23,10 +26,34 @@ type User = {
   washesLeft: number;
 };
 
+// Define booking type
+type Booking = {
+  id: string;
+  machineId: string;
+  machineName: string;
+  startTime: string;
+  endTime: string;
+  status: string;
+};
+
+// Define API response booking type
+type ApiBooking = {
+  id: string;
+  machineId: string;
+  machine?: {
+    machineNumber: string | number;
+  };
+  startTime: string;
+  endTime: string;
+  status?: string;
+};
+
 export default function DashboardPage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [activeBookings, setActiveBookings] = useState<Booking[]>([]);
+  const [bookingsLoading, setBookingsLoading] = useState(true);
 
   useEffect(() => {
     // Check for authentication token
@@ -88,7 +115,90 @@ export default function DashboardPage() {
     };
     
     fetchWashesLeft();
+    
+    // Fetch active bookings
+    const fetchActiveBookings = async () => {
+      setBookingsLoading(true);
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          throw new Error("No token found");
+        }
+        
+        const response = await fetch(`${API_BASE_URL}/api/users/bookings/active`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          
+          // Transform the data to include machine names
+          const transformedBookings = data.bookings.map((booking: ApiBooking) => ({
+            id: booking.id,
+            machineId: booking.machineId,
+            machineName: `Machine ${booking.machine?.machineNumber || booking.machineId}`,
+            startTime: booking.startTime,
+            endTime: booking.endTime,
+            status: booking.status || 'Booked'
+          }));
+          
+          setActiveBookings(transformedBookings);
+        } else {
+          console.warn("Failed to fetch active bookings");
+          setActiveBookings([]);
+        }
+      } catch (error) {
+        console.error("Error fetching active bookings:", error);
+        setActiveBookings([]);
+      } finally {
+        setBookingsLoading(false);
+      }
+    };
+    
+    fetchActiveBookings();
   }, [router]);
+
+  // Helper function to check if a booking can be started now
+  const canStartBooking = (startTime: string, endTime: string) => {
+    const now = new Date();
+    const start = new Date(startTime);
+    const end = new Date(endTime);
+    
+    // Allow starting 10 minutes before the booking time
+    const startWindow = new Date(start);
+    startWindow.setMinutes(startWindow.getMinutes() - 10);
+    
+    return now >= startWindow && now <= end;
+  };
+  
+  // Format the booking time for display
+  const formatBookingTime = (startTime: string, endTime: string) => {
+    const start = new Date(startTime);
+    const end = new Date(endTime);
+    
+    const formatTime = (date: Date) => {
+      return date.toLocaleTimeString('en-US', { 
+        hour: 'numeric', 
+        minute: '2-digit',
+        hour12: true 
+      });
+    };
+    
+    const formatDate = (date: Date) => {
+      return date.toLocaleDateString('en-US', {
+        weekday: 'short',
+        month: 'short', 
+        day: 'numeric'
+      });
+    };
+    
+    // If same day, only show date once
+    if (start.toDateString() === end.toDateString()) {
+      return `${formatDate(start)}, ${formatTime(start)} - ${formatTime(end)}`;
+    }
+    
+    return `${formatDate(start)} ${formatTime(start)} - ${formatDate(end)} ${formatTime(end)}`;
+  };
 
   const handleLogout = async () => {
     // Clear the localStorage items
@@ -96,6 +206,7 @@ export default function DashboardPage() {
     localStorage.removeItem("userEmail");
     localStorage.removeItem("userName");
     localStorage.removeItem("userFloor");
+    localStorage.removeItem("washesLeft");
     
     // Sign out from NextAuth session
     await signOut({ redirect: false });
@@ -157,8 +268,83 @@ export default function DashboardPage() {
           </motion.div>
         </div>
         
+        {/* Active Bookings Section */}
+        <div className="max-w-5xl mx-auto w-full mt-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="bg-zinc-900/80 backdrop-blur-lg rounded-2xl p-6 border border-zinc-800"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold text-white flex items-center">
+                <IconCalendarEvent className="h-5 w-5 text-blue-400 mr-2" />
+                Active Bookings
+              </h3>
+              <button 
+                onClick={() => router.push('/history')}
+                className="text-sm text-blue-400 hover:text-blue-300"
+              >
+                View all bookings
+              </button>
+            </div>
+            
+            {bookingsLoading ? (
+              <div className="flex justify-center items-center py-8">
+                <IconLoader2 className="h-8 w-8 text-blue-500 animate-spin" />
+              </div>
+            ) : activeBookings.length > 0 ? (
+              <div className="space-y-4">
+                {activeBookings.map((booking) => (
+                  <div 
+                    key={booking.id} 
+                    className="bg-zinc-800/50 rounded-xl p-4 border border-zinc-700/50"
+                  >
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div>
+                        <h4 className="font-medium text-white">{booking.machineName}</h4>
+                        <p className="text-sm text-zinc-400">
+                          {formatBookingTime(booking.startTime, booking.endTime)}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => router.push(`/booking-confirmation/${booking.machineId}`)}
+                          className="flex items-center gap-1 px-3 py-1 bg-zinc-700 hover:bg-zinc-600 text-white rounded-md text-sm"
+                        >
+                          <IconEye className="h-4 w-4" />
+                          <span>Details</span>
+                        </button>
+                        {canStartBooking(booking.startTime, booking.endTime) && (
+                          <button
+                            onClick={() => router.push(`/scan/${booking.machineId}`)}
+                            className="flex items-center gap-1 px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded-md text-sm"
+                          >
+                            <IconQrcode className="h-4 w-4" />
+                            <span>Scan to Start</span>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="bg-zinc-800/30 rounded-xl p-6 text-center">
+                <p className="text-zinc-400">You don&apos;t have any active bookings.</p>
+                <button
+                  onClick={() => router.push('/machines')}
+                  className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm"
+                >
+                  Book a Machine
+                </button>
+              </div>
+            )}
+          </motion.div>
+        </div>
+        
         {/* Main Content Section */}
-        <div className="max-w-5xl mx-auto w-full mt-8 flex-grow flex flex-col items-center justify-center">
+        <div className="max-w-5xl mx-auto w-full mt-8 flex-grow flex flex-col items-center">
           <h1 className="bg-clip-text text-transparent text-center bg-gradient-to-b from-neutral-200 to-neutral-600 text-4xl md:text-6xl font-bold mb-12">
             KIIT Washing Machine
           </h1>
