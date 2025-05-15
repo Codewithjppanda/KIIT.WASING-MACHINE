@@ -14,6 +14,8 @@ function VerifyPasswordContent() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('VerifyPassword: API_BASE_URL =', API_BASE_URL);
+    console.log('VerifyPassword: calling login endpoint at', `${API_BASE_URL}/api/users/login`);
     setIsLoading(true);
     
     try {

@@ -11,7 +11,7 @@ dotenv.config();
 
 const app = express();
 app.use(cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000', // Use environment variable or default to localhost
+    origin: process.env.FRONTEND_URL, // now matches Vercel URL
     credentials: true
   }));
    
