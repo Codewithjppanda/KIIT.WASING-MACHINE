@@ -19,8 +19,21 @@ app.use(express.json());  // Body parser
 
 // Connect Database
 sequelize.authenticate()
-    .then(() => console.log('Database connected ✅'))
-    .catch((err) => console.error('Database connection error:', err));
+    .then(() => console.log('Database connected to Aiven MySQL ✅'))
+    .catch((err) => {
+        console.error('Database connection error:');
+        console.error('Error details:', err.message);
+        
+        if (err.message.includes('Access denied')) {
+            console.error('❌ Authentication failed. Check your DB_USER and DB_PASSWORD in .env file');
+        } else if (err.message.includes('ECONNREFUSED')) {
+            console.error('❌ Connection refused. Check your DB_HOST and DB_PORT in .env file');
+        } else if (err.message.includes('SSL')) {
+            console.error('❌ SSL connection error. Make sure DB_SSL is set to "true" for Aiven');
+        } else if (err.message.includes('Unknown database')) {
+            console.error('❌ Database does not exist. Check your DB_NAME in .env file');
+        }
+    });
 
 sequelize.sync({ force: false }) // ALWAYS use force:false in production
     .then(async () => {

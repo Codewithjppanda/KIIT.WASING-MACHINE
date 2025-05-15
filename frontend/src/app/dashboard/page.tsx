@@ -10,9 +10,10 @@ import {
   IconLoader2,
   IconLogout 
 } from "@tabler/icons-react";
-import { motion } from "motion/react";
+import { motion } from "framer-motion";
 import { signOut } from "next-auth/react";
 import { API_BASE_URL } from "@/lib/api";
+import { DashboardButton } from "@/components/ui/dashboard-button";
 
 // Define a user type at the top of your file
 type User = {
@@ -146,7 +147,7 @@ export default function DashboardPage() {
                 </div>
                 <button
                   onClick={handleLogout}
-                  className="ml-2 flex items-center gap-2 px-4 py-2 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition-colors"
+                  className="ml-2 flex items-center gap-2 px-4 py-2 bg-red-500/20 text-red-400 rounded-full hover:bg-red-500/30 transition-colors"
                 >
                   <IconLogout className="h-4 w-4" />
                   <span>Logout</span>
@@ -192,6 +193,22 @@ export default function DashboardPage() {
                 </div>
               </div>
             </CardHoverEffect>
+          </div>
+          
+          {/* Add the Explore Now and Contact Support buttons */}
+          <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-3xl">
+            <DashboardButton 
+              variant="primary" 
+              onClick={() => router.push('/machines')}
+            >
+              Explore Now
+            </DashboardButton>
+            <DashboardButton 
+              variant="secondary" 
+              onClick={() => router.push('/contact')}
+            >
+              Contact Support
+            </DashboardButton>
           </div>
         </div>
       </div>

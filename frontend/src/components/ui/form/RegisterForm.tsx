@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { IconBrandGoogle } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
 import { API_BASE_URL } from "@/lib/api";
+import { AnimatedButton } from "@/components/ui/animated-button";
 
 const schema = z.object({
   firstname: z.string().min(1, "First name is required"),
@@ -122,7 +123,7 @@ export function RegisterForm() {
           <Label htmlFor="floor">Floor</Label>
           <select
             id="floor"
-            className="shadow-input dark:placeholder-text-neutral-600 flex h-10 w-full rounded-md border-none bg-gray-50 px-3 py-2 text-sm text-black transition duration-400 focus-visible:ring-[2px] focus-visible:ring-neutral-400 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:bg-zinc-800 dark:text-white dark:shadow-[0px_0px_1px_1px_#404040] dark:focus-visible:ring-neutral-600"
+            className="group/btn relative block h-10 w-full rounded-full bg-gradient-to-br from-black to-neutral-600 font-medium text-white shadow-[0px_1px_0px_0px_#ffffff40_inset,0px_-1px_0px_0px_#ffffff40_inset]"
             {...register("floor")}
           >
             <option value="4th Floor">4th Floor</option>
@@ -140,30 +141,28 @@ export function RegisterForm() {
           </div>
         )}
 
-        <button
-          className="group/btn relative block h-10 w-full rounded-md bg-gradient-to-br from-black to-neutral-600 font-medium text-white shadow-[0px_1px_0px_0px_#ffffff40_inset,0px_-1px_0px_0px_#ffffff40_inset] dark:bg-zinc-800 dark:from-zinc-900 dark:to-zinc-900 dark:shadow-[0px_1px_0px_0px_#27272a_inset,0px_-1px_0px_0px_#27272a_inset]"
+        <AnimatedButton
           type="submit"
+          variant="primary"
+          className="w-full"
         >
           Sign up &rarr;
-          <BottomGradient />
-        </button>
+        </AnimatedButton>
 
         <div className="my-8 h-[1px] w-full bg-gradient-to-r from-transparent via-neutral-300 to-transparent dark:via-neutral-700" />
 
         <div className="flex flex-col">
-          <button
-            className="group/btn shadow-input relative flex h-10 w-full items-center justify-center space-x-2 rounded-md bg-gray-50 px-4 font-medium text-black dark:bg-zinc-900 dark:shadow-[0px_0px_1px_1px_#262626]"
+          <AnimatedButton
             type="button"
+            variant="outline"
+            className="w-full"
             onClick={() => {
               console.log("Google Sign In clicked");
             }}
           >
-            <IconBrandGoogle className="h-4 w-4 text-neutral-800 dark:text-neutral-300" />
-            <span className="text-sm text-neutral-700 dark:text-neutral-300">
-              Sign up with KIIT Email
-            </span>
-            <BottomGradient />
-          </button>
+            <IconBrandGoogle className="h-4 w-4" />
+            <span>Sign up with KIIT Email</span>
+          </AnimatedButton>
           
           <p className="mt-4 text-center text-xs text-neutral-500 dark:text-neutral-400">
             Only @kiit.ac.in email addresses are allowed
@@ -173,15 +172,6 @@ export function RegisterForm() {
     </div>
   );
 }
-
-const BottomGradient = () => {
-  return (
-    <>
-      <span className="absolute inset-x-0 -bottom-px block h-px w-full bg-gradient-to-r from-transparent via-cyan-500 to-transparent opacity-0 transition duration-500 group-hover/btn:opacity-100" />
-      <span className="absolute inset-x-10 -bottom-px mx-auto block h-px w-1/2 bg-gradient-to-r from-transparent via-indigo-500 to-transparent opacity-0 blur-sm transition duration-500 group-hover/btn:opacity-100" />
-    </>
-  );
-};
 
 const LabelInputContainer = ({
   children,
