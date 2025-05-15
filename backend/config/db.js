@@ -13,11 +13,14 @@ const sequelize = new Sequelize(
         host: process.env.DB_HOST,
         port: process.env.DB_PORT || 3306,
         dialect: 'mysql',
-        dialectOptions: {
-            ssl: process.env.DB_SSL === 'true' ? {
-                rejectUnauthorized: true
-            } : false
-        },
+        dialectOptions: process.env.DB_SSL === 'true'
+            ? {
+                ssl: {
+                    ca: fs.readFileSync(path.join(__dirname, '../certs/aiven-ca.pem')),
+                    rejectUnauthorized: true
+                }
+            }
+            : {},
         logging: process.env.NODE_ENV === 'development' ? console.log : false
     }
 );
