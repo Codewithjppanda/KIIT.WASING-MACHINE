@@ -12,6 +12,7 @@ const transporter = nodemailer.createTransport({
 // Send password reset email
 const sendPasswordResetEmail = async (email, resetLink) => {
   try {
+    console.log('SMTP config:', transporter.options);
     await transporter.sendMail({
       from: `"KIIT Washing Machine" <${process.env.EMAIL_USER}>`,
       to: email,
@@ -29,7 +30,7 @@ const sendPasswordResetEmail = async (email, resetLink) => {
     });
     return true;
   } catch (error) {
-    console.error('Email sending error:', error);
+    console.error('🔴 SMTP failure:', error.response || error);
     return false;
   }
 };
