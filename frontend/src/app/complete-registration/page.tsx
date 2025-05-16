@@ -92,7 +92,7 @@ function CompleteRegistrationContent() {
                 type="text"
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
-                className="w-full p-3 rounded-lg bg-white/10 text-white"
+                className="form-input"
                 placeholder="First Name"
                 required
               />
@@ -102,7 +102,7 @@ function CompleteRegistrationContent() {
                 type="text"
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
-                className="w-full p-3 rounded-lg bg-white/10 text-white"
+                className="w-full p-3 rounded-lg bg-white/10 text-white border border-zinc-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 placeholder="Last Name"
                 required
               />
@@ -114,7 +114,7 @@ function CompleteRegistrationContent() {
               type="text"
               value={rollNo}
               onChange={(e) => setRollNo(e.target.value)}
-              className="w-full p-3 rounded-lg bg-white/10 text-white"
+              className="w-full p-3 rounded-lg bg-white/10 text-white border border-zinc-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="Roll Number"
               required
             />
@@ -125,7 +125,7 @@ function CompleteRegistrationContent() {
               type="text"
               value={mobileNumber}
               onChange={(e) => setMobileNumber(e.target.value)}
-              className="w-full p-3 rounded-lg bg-white/10 text-white"
+              className="w-full p-3 rounded-lg bg-white/10 text-white border border-zinc-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="Mobile Number"
               required
             />
@@ -135,7 +135,7 @@ function CompleteRegistrationContent() {
             <select
               value={floor}
               onChange={(e) => setFloor(e.target.value)}
-              className="w-full p-3 rounded-lg bg-white/10 text-white"
+              className="form-input"
               required
             >
               <option value="4th Floor">4th Floor</option>
@@ -151,7 +151,7 @@ function CompleteRegistrationContent() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full p-3 rounded-lg bg-white/10 text-white"
+              className="form-input"
               placeholder="Create Password"
               required
             />
@@ -160,7 +160,7 @@ function CompleteRegistrationContent() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full p-3 rounded-lg bg-blue-500 text-white font-medium hover:bg-blue-600 disabled:opacity-50"
+            className="btn btn-primary"
           >
             {isLoading ? "Creating Account..." : "Complete Registration"}
           </button>

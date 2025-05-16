@@ -108,7 +108,7 @@ function NewPasswordForm() {
           <button
             type="submit"
             disabled={isLoading || !token || !email}
-            className="w-full p-3 rounded-lg bg-blue-500 text-white font-medium hover:bg-blue-600 disabled:opacity-50"
+            className="btn btn-primary"
           >
             {isLoading ? "Resetting..." : "Reset Password"}
           </button>
