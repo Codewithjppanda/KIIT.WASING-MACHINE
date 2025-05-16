@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useSession, SessionProvider } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { API_BASE_URL } from "@/lib/api";
 
 function ResetPasswordContent() {
   const { data: session } = useSession();
@@ -25,7 +26,7 @@ function ResetPasswordContent() {
     
     try {
       // Request password reset using the verified email
-      const response = await fetch("http://localhost:5000/api/users/request-reset", {
+      const response = await fetch(`${API_BASE_URL}/api/users/request-reset`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
