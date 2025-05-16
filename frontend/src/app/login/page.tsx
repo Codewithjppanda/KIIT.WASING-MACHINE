@@ -1,6 +1,7 @@
 "use client";
 export const dynamic = 'force-dynamic';
 
+import React, { Suspense } from "react";
 import { LoginForm } from "@/components/ui/form/LoginForm";
 import { BackgroundLines } from "@/components/ui/background-lines";
 import { SessionProvider } from "next-auth/react";
@@ -22,7 +23,9 @@ export default function LoginPage() {
           </p>
           
           <div className="w-full max-w-sm md:max-w-md lg:max-w-lg">
-            <LoginForm />
+            <Suspense fallback={<div>Loading...</div>}>
+              <LoginForm />
+            </Suspense>
           </div>
         </div>
       </div>
