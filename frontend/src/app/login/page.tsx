@@ -1,4 +1,5 @@
 "use client";
+export const dynamic = 'force-dynamic';
 
 import { LoginForm } from "@/components/ui/form/LoginForm";
 import { BackgroundLines } from "@/components/ui/background-lines";
