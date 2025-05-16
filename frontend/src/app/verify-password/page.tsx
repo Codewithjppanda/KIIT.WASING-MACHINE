@@ -76,7 +76,7 @@ function VerifyPasswordContent() {
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full p-3 rounded-lg bg-white/10 text-white mb-4"
+            className="w-full p-3 rounded-lg bg-white/10 text-white border border-zinc-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 mb-4"
             placeholder="Enter your password"
           />
           

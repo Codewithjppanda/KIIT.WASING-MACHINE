@@ -90,7 +90,7 @@ function NewPasswordForm() {
               type="password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              className="w-full p-3 rounded-lg bg-white/10 text-white mb-2"
+              className="w-full p-3 rounded-lg bg-white/10 text-white border border-zinc-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 mb-2"
               placeholder="New Password"
             />
           </div>
@@ -100,7 +100,7 @@ function NewPasswordForm() {
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full p-3 rounded-lg bg-white/10 text-white"
+              className="w-full p-3 rounded-lg bg-white/10 text-white border border-zinc-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="Confirm New Password"
             />
           </div>
