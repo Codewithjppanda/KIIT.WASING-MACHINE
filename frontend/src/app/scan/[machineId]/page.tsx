@@ -59,28 +59,26 @@ export default function ScanPage() {
   }, [machineId, router]);
 
   useEffect(() => {
-    if (scannerRef.current) {
-      const scanner = new Html5Qrcode("reader");
-      
-      scanner.start(
-        { facingMode: "environment" },
-        { fps: 10, qrbox: 250 },
-        () => {
-          // QR code detected successfully, no need to use the text
-          setScanning(false);
-          startMachine();
-          scanner.stop();
-        },
-        (errorMessage) => {
-          console.warn(`QR error: ${errorMessage}`);
-        }
-      );
-      
-      return () => {
-        scanner.stop().catch(console.error);
-      };
-    }
-  }, [startMachine]);
+    if (!scanning) return;
+    const scanner = new Html5Qrcode("reader");
+
+    scanner.start(
+      { facingMode: "environment" },
+      { fps: 10, qrbox: 250 },
+      () => {
+        setScanning(false);
+        startMachine();
+        scanner.stop();
+      },
+      (errorMessage) => {
+        console.warn(`QR error: ${errorMessage}`);
+      }
+    );
+
+    return () => {
+      scanner.stop().catch(console.error);
+    };
+  }, [scanning, startMachine]);
 
   return (
     <div className="min-h-screen relative overflow-hidden bg-black">

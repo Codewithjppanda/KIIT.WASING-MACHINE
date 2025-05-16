@@ -6,17 +6,23 @@ const handler = NextAuth({
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      authorization: {
+        params: {
+          prompt: "select_account",
+          hd: "kiit.ac.in"
+        }
+      }
     }),
   ],
   callbacks: {
     async signIn({ account, profile }) {
       if (account?.provider === "google") {
-        // Only verify KIIT email - we'll check registration status later
-        const isKiitEmail = profile?.email?.endsWith("@kiit.ac.in");
-        if (!isKiitEmail) {
-          throw new Error("Please use your KIIT email address (@kiit.ac.in)");
+        // Only allow KIIT email addresses
+        const email = profile?.email || '';
+        if (!email.endsWith("@kiit.ac.in")) {
+          // Deny sign in - NextAuth will redirect to /login?error=AccessDenied
+          return false;
         }
-        
         return true;
       }
       return false;
@@ -36,3 +42,4 @@ const handler = NextAuth({
 });
 
 export { handler as GET, handler as POST };
+ 

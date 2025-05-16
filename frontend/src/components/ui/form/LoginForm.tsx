@@ -1,14 +1,23 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { IconBrandGoogle } from "@tabler/icons-react";
 import { signIn, useSession } from "next-auth/react";
 import { AnimatedButton } from "@/components/ui/animated-button";
+import { useSearchParams } from 'next/navigation';
 
 export function LoginForm() {
   const { status } = useSession();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const err = searchParams.get('error');
+    if (err === 'AccessDenied') {
+      setError('Only KIIT students are allowed. Please sign in with your KIIT email.');
+    }
+  }, [searchParams]);
 
   const handleGoogleSignIn = async () => {
     try {

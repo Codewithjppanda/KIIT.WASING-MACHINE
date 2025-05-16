@@ -75,7 +75,7 @@ function ResetPasswordContent() {
             <button
               onClick={handleResetPassword}
               disabled={isLoading}
-              className="w-full p-3 rounded-lg bg-blue-500 text-white font-medium hover:bg-blue-600 disabled:opacity-50"
+              className="btn btn-primary"
             >
               {isLoading ? "Sending..." : "Send Reset Instructions"}
             </button>

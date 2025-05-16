@@ -4,6 +4,8 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { BackgroundLines } from "@/components/ui/background-lines";
 import { API_BASE_URL } from "@/lib/api";
+import Button from "@/components/ui/button";
+import Link from "next/link";
 
 type Machine = {
   id: string;
@@ -25,6 +27,8 @@ type TimeSlot = {
     label: string;
   };
 };
+
+
 
 export default function MachinesPage() {
   const router = useRouter();
@@ -82,7 +86,7 @@ export default function MachinesPage() {
           id: machine.id,
           status: mapStatusToUI(machine.status),
           floor: localStorage.getItem("userFloor") || userFloor,
-          name: `Machine ${machine.machineNumber}`,
+          name: `Machine ${machine.id}`,
           booking: machine.booking
         }));
 
@@ -234,12 +238,11 @@ export default function MachinesPage() {
             <h2 className="text-xl md:text-3xl font-bold text-white">
               Available Washing Machines
             </h2>
-            <button 
-              onClick={() => router.push("/dashboard")}
-              className="text-blue-400 hover:text-blue-300"
-            >
-              Back to Dashboard
-            </button>
+            <Link href="/dashboard">
+              <Button variant="outline" size="md">
+                Back to Dashboard
+              </Button>
+            </Link>
           </div>
           
           {availableMachines.length === 0 ? (
@@ -266,7 +269,7 @@ export default function MachinesPage() {
                       <button
                         onClick={() => router.push(`/scan/${machine.id}`)}
                         disabled={!canScan}
-                        className={`w-full py-2 ${canScan ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-600/50 cursor-not-allowed'} text-white rounded-md transition-colors`}
+                        className="btn btn-primary"
                       >
                         Scan Now
                       </button>
@@ -325,7 +328,7 @@ export default function MachinesPage() {
                           alert("Please select a time slot first");
                         }
                       }}
-                      className="w-full py-2 bg-green-600 hover:bg-green-700 text-white rounded-md transition-colors"
+                      className="btn btn-secondary"
                     >
                       Book Now
                     </button>

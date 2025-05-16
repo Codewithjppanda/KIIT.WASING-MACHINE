@@ -135,7 +135,7 @@ function CompleteRegistrationContent() {
             <select
               value={floor}
               onChange={(e) => setFloor(e.target.value)}
-              className="form-input"
+              className="w-full p-3 rounded-lg bg-white/10 text-white border border-zinc-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               required
             >
               <option value="4th Floor">4th Floor</option>

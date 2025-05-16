@@ -1,24 +1,40 @@
 // Label component extends from shadcnui - https://ui.shadcn.com/docs/components/label
 
 "use client";
-import * as React from "react";
-import * as LabelPrimitive from "@radix-ui/react-label";
+import React from "react";
+import { motion, HTMLMotionProps } from "motion/react";
 
-import { cn } from "@/lib/utils";
+interface LabelProps extends Omit<HTMLMotionProps<"label">, "ref"> {
+  variant?: "default" | "heading" | "subtitle";
+  children: React.ReactNode;
+  className?: string;
+}
 
-const Label = React.forwardRef<
-  React.ElementRef<typeof LabelPrimitive.Root>,
-  React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root>
->(({ className, ...props }, ref) => (
-  <LabelPrimitive.Root
-    ref={ref}
-    className={cn(
-      "text-sm font-medium text-black dark:text-white leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70",
-      className
-    )}
-    {...props}
-  />
-));
-Label.displayName = LabelPrimitive.Root.displayName;
+const Label = React.forwardRef<HTMLLabelElement, LabelProps>(
+  ({ variant = "default", children, className = "", ...props }, ref) => {
+    const baseStyles = "block font-medium";
+    
+    const variants = {
+      default: "text-gray-700 dark:text-gray-200",
+      heading: "text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600",
+      subtitle: "text-gray-500 dark:text-gray-400",
+    };
 
-export { Label };
+    return (
+      <motion.label
+        ref={ref}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.2 }}
+        className={`${baseStyles} ${variants[variant]} ${className}`}
+        {...props}
+      >
+        {children}
+      </motion.label>
+    );
+  }
+);
+
+Label.displayName = "Label";
+
+export default Label;
