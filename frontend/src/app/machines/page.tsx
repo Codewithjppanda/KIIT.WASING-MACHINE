@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { BackgroundLines } from "@/components/ui/background-lines";
 import { API_BASE_URL } from "@/lib/api";
@@ -130,6 +130,41 @@ export default function MachinesPage() {
     }
   };
 
+  const fetchMachinesData = useCallback(async () => {
+    try {
+      const machinesResponse = await fetch(`${API_BASE_URL}/api/users/machines/status`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+      });
+      
+      if (!machinesResponse.ok) {
+        throw new Error("Failed to fetch machines");
+      }
+      
+      const machinesData = await machinesResponse.json();
+      
+      // Transform data to match expected format
+      const transformedMachines = (machinesData.machines || []).map((machine: {
+        id: string;
+        machineNumber: number | string;
+        status: string;
+        booking?: {
+          startTime: Date | string;
+          endTime: Date | string;
+        };
+      }) => ({
+        id: machine.id,
+        status: mapStatusToUI(machine.status),
+        floor: localStorage.getItem("userFloor") || userFloor,
+        name: `Machine ${machine.id}`,
+        booking: machine.booking
+      }));
+      
+      setMachines(transformedMachines);
+    } catch (error) {
+      console.error("Error fetching machines:", error);
+    }
+  }, [userFloor]);
+
   useEffect(() => {
     // Remove the user data fetch and use localStorage directly:
     const userFloor = localStorage.getItem("userFloor");
@@ -225,42 +260,7 @@ export default function MachinesPage() {
     };
     
     fetchData();
-  }, [router]);
-
-  const fetchMachinesData = async () => {
-    try {
-      const machinesResponse = await fetch(`${API_BASE_URL}/api/users/machines/status`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
-      });
-      
-      if (!machinesResponse.ok) {
-        throw new Error("Failed to fetch machines");
-      }
-      
-      const machinesData = await machinesResponse.json();
-      
-      // Transform data to match expected format
-      const transformedMachines = (machinesData.machines || []).map((machine: {
-        id: string;
-        machineNumber: number | string;
-        status: string;
-        booking?: {
-          startTime: Date | string;
-          endTime: Date | string;
-        };
-      }) => ({
-        id: machine.id,
-        status: mapStatusToUI(machine.status),
-        floor: localStorage.getItem("userFloor") || userFloor,
-        name: `Machine ${machine.id}`,
-        booking: machine.booking
-      }));
-      
-      setMachines(transformedMachines);
-    } catch (error) {
-      console.error("Error fetching machines:", error);
-    }
-  };
+  }, [router, fetchMachinesData]);
 
   const handleBookMachine = async (machineId: string, startTime: Date, endTime: Date) => {
     if (!startTime || !endTime) {
@@ -370,8 +370,7 @@ export default function MachinesPage() {
     }
   };
 
-  // Transform machines for display, ensuring booked machines appear
-  const prepareDisplayMachines = () => {
+  const prepareDisplayMachines = useCallback(() => {
     if (!machines.length) return [];
     
     // Create a copy of machines to avoid modifying the original
@@ -399,9 +398,8 @@ export default function MachinesPage() {
     });
     
     return displayMachines;
-  };
+  }, [machines, userBookings, userFloor]);
 
-  // Filter machines to show
   const availableMachines = useMemo(() => {
     const displayMachines = prepareDisplayMachines();
     
@@ -421,7 +419,7 @@ export default function MachinesPage() {
       
       return isAvailable || isCurrentBooking || isUserBooked || isUserBookedStatus;
     });
-  }, [machines, booking, userBookings, userFloor]);
+  }, [prepareDisplayMachines, booking, userBookings]);
 
   // Determine if the user can book (for today or tomorrow) based on Indian Standard Time
   const canFloorBookToday = (floor: string): { canBook: boolean, isDayBefore: boolean } => {
