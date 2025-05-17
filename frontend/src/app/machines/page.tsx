@@ -400,24 +400,23 @@ export default function MachinesPage() {
     return displayMachines;
   }, [machines, userBookings, userFloor]);
 
-  const availableMachines = useMemo(() => {
+  const allDisplayedMachines = useMemo(() => {
     const displayMachines = prepareDisplayMachines();
     
-    return displayMachines.filter(machine => {
+    return displayMachines.map(machine => {
+      // Add properties to indicate machine status for UI
       const isAvailable = machine.status === 'vacant';
-      
-      // Check if machine is booked by user (from current booking)
       const isCurrentBooking = booking?.machine === machine.id;
-      
-      // Check if machine is in user's bookings list
       const isUserBooked = userBookings.some(b => b.machineId === machine.id);
-      
-      // Special status we added for missing machines
       const isUserBookedStatus = machine.status === 'user-booked';
       
-      console.log(`Machine ${machine.id} status=${machine.status} isAvailable=${isAvailable} isBooked=${isCurrentBooking || isUserBooked}`);
-      
-      return isAvailable || isCurrentBooking || isUserBooked || isUserBookedStatus;
+      return {
+        ...machine,
+        canBook: isAvailable, // Can book now (vacant)
+        isUserBooked: isCurrentBooking || isUserBooked || isUserBookedStatus, // User's machine
+        isBusy: machine.status === 'washing' || machine.status === 'occupied', // In use by someone else
+        nextAvailable: machine.booking ? new Date(machine.booking.endTime) : null, // When it becomes available
+      };
     });
   }, [prepareDisplayMachines, booking, userBookings]);
 
@@ -578,57 +577,134 @@ export default function MachinesPage() {
             </Link>
           </div>
           
-          {availableMachines.length === 0 ? (
+          {allDisplayedMachines.length === 0 ? (
             <div className="bg-zinc-900/80 rounded-xl p-8 text-center">
-              <p className="text-white text-lg">No vacant machines available on your floor right now.</p>
+              <p className="text-white text-lg">No machines found on your floor.</p>
               <p className="text-neutral-400 mt-2">Please check back later.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {availableMachines.map(machine => {
-                // Find if this machine is in any of the user's bookings
-                const userBooking = userBookings.find(b => b.machineId === machine.id);
+              {allDisplayedMachines.map(machine => {
+                // 1. User's booked machine (show booking details & scan button)
+                if (machine.isUserBooked) {
+                  const userBooking = userBookings.find(b => b.machineId === machine.id);
+                  const bookingToUse = 
+                    (booking?.machine === machine.id) ? booking : 
+                    userBooking ? { machine: userBooking.machineId, startTime: userBooking.startTime, endTime: userBooking.endTime } :
+                    null;
+                  
+                  if (bookingToUse) {
+                    const scanState = getScanButtonState(bookingToUse.startTime, bookingToUse.endTime);
+                    return (
+                      <motion.div
+                        key={machine.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="bg-zinc-900/80 rounded-xl p-6 border border-blue-500/20"
+                      >
+                        <div className="flex items-center mb-4">
+                          <div className="w-3 h-3 rounded-full bg-blue-500 mr-2"></div>
+                          <h3 className="text-white font-medium">{machine.name}</h3>
+                        </div>
+                        <p className="text-neutral-400 mb-4">
+                          Booked for {bookingToUse.startTime.toLocaleDateString()}, 
+                          {bookingToUse.startTime.toLocaleTimeString()} - {bookingToUse.endTime.toLocaleTimeString()}
+                        </p>
+                        
+                        {scanState.timeLeft > 0 && <ScanningStatus timeLeft={scanState.timeLeft} />}
+                        
+                        <Button
+                          variant={scanState.canScan ? "primary" : "outline"}
+                          size="lg"
+                          className="w-full"
+                          onClick={() => scanState.canScan && router.push(`/scan/${machine.id}`)}
+                          disabled={!scanState.canScan}
+                        >
+                          {scanState.text}
+                        </Button>
+                      </motion.div>
+                    );
+                  }
+                }
                 
-                // Use either booking from state, or from userBookings list
-                const bookingToUse = 
-                  (booking?.machine === machine.id) ? booking : 
-                  userBooking ? { machine: userBooking.machineId, startTime: userBooking.startTime, endTime: userBooking.endTime } :
-                  null;
-                
-                if (bookingToUse) {
-                  const scanState = getScanButtonState(bookingToUse.startTime, bookingToUse.endTime);
+                // 2. Machines in use by others (show when they'll be available)
+                if (machine.isBusy) {
                   return (
-                    <motion.div
-                      key={machine.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="bg-zinc-900/80 rounded-xl p-6 border border-blue-500/20"
-                    >
+                    <div key={machine.id} className="bg-zinc-900/80 rounded-xl p-6 border border-yellow-500/20">
                       <div className="flex items-center mb-4">
-                        <div className="w-3 h-3 rounded-full bg-blue-500 mr-2"></div>
+                        <div className="w-3 h-3 rounded-full bg-yellow-500 mr-2"></div>
                         <h3 className="text-white font-medium">{machine.name}</h3>
                       </div>
-                      <p className="text-neutral-400 mb-4">
-                        Booked for {bookingToUse.startTime.toLocaleDateString()}, 
-                        {bookingToUse.startTime.toLocaleTimeString()} - {bookingToUse.endTime.toLocaleTimeString()}
-                      </p>
+                      <p className="text-neutral-400 mb-2">Status: {machine.status.charAt(0).toUpperCase() + machine.status.slice(1)}</p>
                       
-                      {scanState.timeLeft > 0 && <ScanningStatus timeLeft={scanState.timeLeft} />}
+                      {machine.nextAvailable ? (
+                        <div className="p-3 bg-zinc-800/80 rounded-lg mb-4">
+                          <p className="text-neutral-300 text-sm">Available after: {machine.nextAvailable.toLocaleTimeString()}</p>
+                          <p className="text-neutral-500 text-xs mt-1">You can book future slots</p>
+                        </div>
+                      ) : (
+                        <p className="text-neutral-400 mb-4">Currently in use</p>
+                      )}
                       
-                      <Button
-                        variant={scanState.canScan ? "primary" : "outline"}
-                        size="lg"
-                        className="w-full"
-                        onClick={() => scanState.canScan && router.push(`/scan/${machine.id}`)}
-                        disabled={!scanState.canScan}
+                      {/* Time Slot Selection (same as vacant machines) */}
+                      <div className="mb-4">
+                        <label htmlFor={`timeSlot-${machine.id}`} className="text-white mb-2 block">
+                          Select a future time slot:
+                        </label>
+                        {getAvailableTimeSlots().length > 0 ? (
+                          <select
+                            id={`timeSlot-${machine.id}`}
+                            onChange={(e) => {
+                              const slotId = parseInt(e.target.value);
+                              const slot = getAvailableTimeSlots().find((s) => s.id === slotId);
+                              if (slot) {
+                                setSelectedTimeSlot({ machine: machine.id, slot });
+                              }
+                            }}
+                            value={selectedTimeSlot?.machine === machine.id ? selectedTimeSlot.slot.id : ""}
+                            className="w-full p-2 rounded-md bg-zinc-800 text-white border-none focus:ring-2 focus:ring-blue-500"
+                          >
+                            <option value="" disabled>Choose a time</option>
+                            {getAvailableTimeSlots().map((slot) => (
+                              <option key={slot.id} value={slot.id}>
+                                {slot.label}
+                              </option>
+                            ))}
+                          </select>
+                        ) : (
+                          <div className="p-3 bg-yellow-500/20 text-yellow-400 text-sm rounded-lg">
+                            {!canFloorBookToday(userFloor).canBook ? 
+                              `Your floor (${userFloor}) can only book on ${getAllowedDays(userFloor)}` : 
+                              "No time slots available for today. Slots open at 6 PM the day before."
+                            }
+                          </div>
+                        )}
+                      </div>
+                      
+                      <button
+                        onClick={() => {
+                          if (selectedTimeSlot?.machine === machine.id) {
+                            handleBookMachine(machine.id, selectedTimeSlot.slot.startTime, selectedTimeSlot.slot.endTime);
+                          }
+                        }}
+                        disabled={loadingMachineId === machine.id || !selectedTimeSlot || selectedTimeSlot.machine !== machine.id}
+                        className={`w-full py-2 px-4 rounded-md bg-blue-600 text-white hover:bg-blue-700 transition-colors ${
+                          (loadingMachineId === machine.id || !selectedTimeSlot || selectedTimeSlot.machine !== machine.id) 
+                            ? 'opacity-50 cursor-not-allowed' 
+                            : ''
+                        }`}
                       >
-                        {scanState.text}
-                      </Button>
-                    </motion.div>
+                        {loadingMachineId === machine.id ? (
+                          <div className="mx-auto h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        ) : (
+                          'Book Future Slot'
+                        )}
+                      </button>
+                    </div>
                   );
                 }
                 
-                // Render vacant machine (same as before)
+                // 3. Vacant machine (available now)
                 return (
                   <div key={machine.id} className="bg-zinc-900/80 rounded-xl p-6 border border-green-500/20">
                     <div className="flex items-center mb-4">
@@ -637,7 +713,7 @@ export default function MachinesPage() {
                     </div>
                     <p className="text-neutral-400 mb-4">Status: Available</p>
                     
-                    {/* Time Slot Selection Dropdown */}
+                    {/* Time Slot Selection Dropdown (unchanged) */}
                     <div className="mb-4">
                       <label htmlFor={`timeSlot-${machine.id}`} className="text-white mb-2 block">
                         Select a time slot:
@@ -647,7 +723,7 @@ export default function MachinesPage() {
                           id={`timeSlot-${machine.id}`}
                           onChange={(e) => {
                             const slotId = parseInt(e.target.value);
-                            const slot = getAvailableTimeSlots().find((s: { id: number; startTime: Date; endTime: Date; label: string }) => s.id === slotId);
+                            const slot = getAvailableTimeSlots().find((s) => s.id === slotId);
                             if (slot) {
                               setSelectedTimeSlot({ machine: machine.id, slot });
                             }
@@ -656,7 +732,7 @@ export default function MachinesPage() {
                           className="w-full p-2 rounded-md bg-zinc-800 text-white border-none focus:ring-2 focus:ring-blue-500"
                         >
                           <option value="" disabled>Choose a time</option>
-                          {getAvailableTimeSlots().map((slot: { id: number; startTime: Date; endTime: Date; label: string }) => (
+                          {getAvailableTimeSlots().map((slot) => (
                             <option key={slot.id} value={slot.id}>
                               {slot.label}
                             </option>
@@ -676,12 +752,12 @@ export default function MachinesPage() {
                       onClick={() => {
                         if (selectedTimeSlot?.machine === machine.id) {
                           handleBookMachine(machine.id, selectedTimeSlot.slot.startTime, selectedTimeSlot.slot.endTime);
-                        } else {
-                          // No selection made
                         }
                       }}
                       disabled={loadingMachineId === machine.id}
-                      className={`btn btn-secondary ${loadingMachineId === machine.id ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      className={`w-full py-2 px-4 rounded-md bg-green-600 text-white hover:bg-green-700 transition-colors ${
+                        loadingMachineId === machine.id ? 'opacity-50 cursor-not-allowed' : ''
+                      }`}
                     >
                       {loadingMachineId === machine.id ? (
                         <div className="mx-auto h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
