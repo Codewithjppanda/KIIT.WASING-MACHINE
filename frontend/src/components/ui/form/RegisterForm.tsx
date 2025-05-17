@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Input } from "@/components/ui/input";
-import Label from "@/components/ui/label";
+import { Label } from "@/components/ui/label";
 import { IconBrandGoogle } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
 import { API_BASE_URL } from "@/lib/api";
