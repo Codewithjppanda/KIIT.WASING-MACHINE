@@ -16,52 +16,13 @@ exports.getAllMachines = async (req, res) => {
 // ✅ Get machines with current booking status
 exports.getMachinesWithStatus = async (req, res) => {
     try {
+        // Return each machine with its current DB-stored status
         const machines = await Machine.findAll();
-        const now = new Date();
-
-        const activeBookings = await Booking.findAll({
-            where: {
-                startTime: { [Op.lte]: now },
-                endTime: { [Op.gte]: now }
-            }
-        });
-
-        const bookingMap = {};
-        activeBookings.forEach(booking => {
-            bookingMap[booking.machineId] = {
-                startTime: new Date(booking.startTime),
-                endTime: new Date(booking.endTime)
-            };
-        });
-
-        const machinesWithStatus = machines.map(machine => {
-            const booking = bookingMap[machine.id];
-            let status = 'Available';
-            let bookingInfo = null;
-
-            if (booking) {
-                const washEndTime = new Date(booking.startTime.getTime() + 45 * 60000); // 45 mins wash
-
-                if (now < washEndTime) {
-                    status = 'Washing';
-                } else if (now >= washEndTime && now <= booking.endTime) {
-                    status = 'Ready to Collect';
-                }
-
-                bookingInfo = {
-                    startTime: booking.startTime,
-                    endTime: booking.endTime
-                };
-            }
-
-            return {
-                id: machine.id,
-                machineNumber: machine.machineNumber,
-                status,
-                booking: bookingInfo
-            };
-        });
-
+        const machinesWithStatus = machines.map(machine => ({
+            id: machine.id,
+            machineNumber: machine.machineNumber,
+            status: machine.status
+        }));
         res.json({ machines: machinesWithStatus });
     } catch (error) {
         console.error(error);

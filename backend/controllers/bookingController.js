@@ -8,40 +8,74 @@ const moment = require('moment-timezone');
 
 exports.bookMachine = async (req, res) => {
     try {
+      console.log('Booking request received:', req.body);
+      
       const authHeader = req.headers.authorization;
       if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        console.log('Authorization header missing or invalid');
         return res.status(401).json({ message: 'Authorization token missing' });
       }
   
       const token = authHeader.split(' ')[1];
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      let decoded;
+      try {
+        decoded = jwt.verify(token, process.env.JWT_SECRET);
+      } catch (err) {
+        console.log('JWT verification failed:', err.message);
+        return res.status(401).json({ message: 'Invalid or expired token' });
+      }
       const userId = decoded.id;
   
       const user = await User.findByPk(userId);
       if (!user) {
+        console.log('User not found for ID:', userId);
         return res.status(404).json({ message: 'User not found' });
       }
   
       if (user.washesLeft <= 0) {
+        console.log('User has no washes left:', userId);
         return res.status(403).json({ message: 'No washes left. Please contact admin.' });
       }
   
-      const { machineId, startTime, endTime } = req.body;
-      if (!machineId || !startTime || !endTime) {
-        return res.status(400).json({ message: 'Please provide machine ID and time slots.' });
+      const { machineId, startTime: startStr, endTime: endStr } = req.body;
+      console.log('Parsed request data:', { machineId, startStr, endStr });
+      
+      // Parse start/end times
+      const startTime = new Date(startStr);
+      const endTime = new Date(endStr);
+      if (!machineId || !startTime || !endTime || isNaN(startTime.getTime()) || isNaN(endTime.getTime())) {
+        console.log('Invalid time format or missing data:', { machineId, startTime, endTime });
+        return res.status(400).json({ 
+          message: 'Please provide valid machine ID and time slots.',
+          details: { machineId, startTime: startStr, endTime: endStr }
+        });
       }
   
       const machine = await Machine.findOne({ where: { id: machineId } });
       if (!machine) {
+        console.log('Machine not found:', machineId);
         return res.status(400).json({ message: 'Machine not found' });
       }
   
       // Validate booking window: only 10 AM – 6 PM IST
       const startIST = moment.tz(startTime, 'Asia/Kolkata');
       const endIST = moment.tz(endTime, 'Asia/Kolkata');
+      console.log('Time validation:', { 
+        startIST: startIST.format(), 
+        endIST: endIST.format(),
+        startHour: startIST.hour(),
+        endHour: endIST.hour()
+      });
   
       if (startIST.hour() < 10 || endIST.hour() > 18 || endIST.isBefore(startIST)) {
-        return res.status(400).json({ message: 'Booking must be between 10 AM and 6 PM IST.' });
+        console.log('Invalid booking window:', { startHour: startIST.hour(), endHour: endIST.hour() });
+        return res.status(400).json({ 
+          message: 'Booking must be between 10 AM and 6 PM IST.',
+          details: {
+            startTime: startIST.format(),
+            endTime: endIST.format()
+          }
+        });
       }
   
       // Validate floor-based allowed booking days
@@ -55,16 +89,42 @@ exports.bookMachine = async (req, res) => {
   
       const bookingDay = startIST.format('dddd');
       const currentIST = moment().tz('Asia/Kolkata');
-      const currentDay = currentIST.format('dddd');
+      console.log('Day validation:', {
+        userFloor: user.floor,
+        bookingDay,
+        allowedDays: allowedDays[user.floor]
+      });
   
       // Allow only from previous day 6 PM
       const allowedBookingStart = startIST.clone().subtract(1, 'days').hour(18).minute(0).second(0);
       if (currentIST.isBefore(allowedBookingStart)) {
-        return res.status(403).json({ message: 'You can only book from 6 PM the previous day.' });
+        console.log('Booking too early:', {
+          current: currentIST.format(),
+          allowedStart: allowedBookingStart.format()
+        });
+        return res.status(403).json({ 
+          message: 'You can only book from 6 PM the previous day.',
+          details: {
+            currentTime: currentIST.format(),
+            allowedStartTime: allowedBookingStart.format()
+          }
+        });
       }
   
       if (!allowedDays[user.floor] || !allowedDays[user.floor].includes(bookingDay)) {
-        return res.status(403).json({ message: `Your floor can only book on ${allowedDays[user.floor]?.join(', ') || 'restricted days'}` });
+        console.log('Invalid booking day for floor:', {
+          floor: user.floor,
+          bookingDay,
+          allowedDays: allowedDays[user.floor]
+        });
+        return res.status(403).json({ 
+          message: `Your floor can only book on ${allowedDays[user.floor]?.join(' and ') || 'restricted days'}`,
+          details: {
+            floor: user.floor,
+            bookingDay,
+            allowedDays: allowedDays[user.floor]
+          }
+        });
       }
   
       const existingBooking = await Booking.findOne({
@@ -76,44 +136,67 @@ exports.bookMachine = async (req, res) => {
       });
   
       if (existingBooking) {
-        return res.status(400).json({ message: 'Machine already booked at that time.' });
+        console.log('Conflicting booking found:', existingBooking.id);
+        return res.status(400).json({ 
+          message: 'Machine already booked at that time.',
+          details: {
+            existingBooking: {
+              startTime: existingBooking.startTime,
+              endTime: existingBooking.endTime
+            }
+          }
+        });
       }
   
       const bookingEndLimit = new Date(startTime);
       bookingEndLimit.setHours(18, 0, 0, 0); // 6 PM on booking day
       if (endTime > bookingEndLimit) {
-        return res.status(400).json({ message: 'Booking must end by 6 PM on the same day.' });
+        console.log('Booking ends after limit:', {
+          endTime: endTime.toISOString(),
+          limit: bookingEndLimit.toISOString()
+        });
+        return res.status(400).json({ 
+          message: 'Booking must end by 6 PM on the same day.',
+          details: {
+            endTime: endTime.toISOString(),
+            limit: bookingEndLimit.toISOString()
+          }
+        });
       }
   
-      // Check if booking starts at the beginning of an hour
-      if (startTime.getMinutes() !== 0 || startTime.getSeconds() !== 0) {
-        return res.status(400).json({ message: 'Booking must start at the beginning of an hour.' });
+      // Enforce wash + buffer durations: total 55 minutes (45 min wash + 10 min buffer)
+      const washMs = 45 * 60 * 1000;
+      const bufferMs = 10 * 60 * 1000;
+      const totalBookingMs = washMs + bufferMs;
+      const actualDuration = endTime.getTime() - startTime.getTime();
+      console.log('Duration validation:', {
+        expected: totalBookingMs,
+        actual: actualDuration,
+        difference: Math.abs(totalBookingMs - actualDuration)
+      });
+      
+      if (Math.abs(endTime.getTime() - startTime.getTime() - totalBookingMs) > 1000) { // 1 second tolerance
+        return res.status(400).json({ 
+          message: 'Booking must be exactly 55 minutes (45 min wash + 10 min buffer).',
+          details: {
+            expectedDuration: '55 minutes',
+            actualDuration: `${Math.round(actualDuration / (60 * 1000))} minutes`
+          }
+        });
       }
   
-      // Check if booking is for exactly 1 hour
-      const bookingDuration = (endTime - startTime) / (60 * 60 * 1000); // in hours
-      if (bookingDuration !== 1) {
-        return res.status(400).json({ message: 'Booking must be for exactly 1 hour.' });
-      }
-  
-      // Check if booking starts between 10 AM and 5 PM
-      const hour = startTime.getHours();
-      if (hour < 10 || hour > 17) {
-        return res.status(400).json({ message: 'Booking must start between 10 AM and 5 PM.' });
-      }
-  
-      const booking = await Booking.create({
-        userId,
-        machineId,
-        startTime,
-        endTime
+      // Use a transaction to ensure consistency
+      const result = await Booking.sequelize.transaction(async (t) => {
+        const booking = await Booking.create({ userId, machineId, startTime, endTime }, { transaction: t });
+        await machine.update({ status: 'Occupied' }, { transaction: t });
+        // Reduce washes
+        user.washesLeft -= 1;
+        await user.save({ transaction: t });
+        return booking;
       });
   
-      await machine.update({ status: 'Occupied' });
-  
-      // Reduce washes
-      user.washesLeft -= 1;
-      await user.save();
+      const booking = result;
+      console.log('Booking created successfully:', booking.id);
   
       res.status(201).json({
         message: 'Booking successful!',
@@ -123,10 +206,13 @@ exports.bookMachine = async (req, res) => {
       });
   
     } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: 'Server error during booking' });
+      console.error('Server error during booking:', error);
+      res.status(500).json({ 
+        message: 'Server error during booking',
+        details: error.message
+      });
     }
-  };
+};
   
 
 

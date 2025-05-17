@@ -22,12 +22,12 @@ const Label = React.forwardRef<HTMLLabelElement, LabelProps>(
 
     return (
       <motion.label
-        ref={ref}
+    ref={ref}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.2 }}
         className={`${baseStyles} ${variants[variant]} ${className}`}
-        {...props}
+    {...props}
       >
         {children}
       </motion.label>

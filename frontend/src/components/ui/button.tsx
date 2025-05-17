@@ -23,18 +23,18 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       md: "px-6 py-2 text-base",
       lg: "px-8 py-3 text-lg",
     };
-    return (
+  return (
       <motion.button
         ref={ref}
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
         className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${className}`}
-        {...props}
+      {...props}
       >
         {children}
       </motion.button>
     );
-  }
+}
 );
 
 Button.displayName = "Button";

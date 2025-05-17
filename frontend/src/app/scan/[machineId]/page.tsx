@@ -32,7 +32,7 @@ export default function ScanPage() {
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(`${API_BASE_URL}/api/users/start/${machineId}`, {
-        method: "POST", 
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`
@@ -63,7 +63,7 @@ export default function ScanPage() {
     const scanner = new Html5Qrcode("reader");
 
     scanner.start(
-      { facingMode: "environment" },
+      { facingMode: "user" },
       { fps: 10, qrbox: 250 },
       () => {
         setScanning(false);
