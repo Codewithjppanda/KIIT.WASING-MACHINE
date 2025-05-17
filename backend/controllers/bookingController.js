@@ -212,7 +212,7 @@ exports.bookMachine = async (req, res) => {
         details: error.message
       });
     }
-};
+  };
   
 
 
@@ -338,5 +338,5 @@ exports.getActiveBookings = async (req, res) => {
   } catch (error) {
     console.error('Error fetching active bookings:', error);
     res.status(500).json({ message: 'Server error fetching active bookings' });
-  }
+    }
 };

@@ -302,7 +302,7 @@ export default function DashboardPage() {
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => router.push(`/booking-confirmation/${booking.machineId}`)}
-                            className="flex items-center gap-1 px-3 py-1 bg-zinc-700 hover:bg-zinc-600 text-white rounded-md text-sm"
+                            className="flex items-center gap-1 px-3 py-1 bg-zinc-700 hover:bg-zinc-600 text-white rounded-full text-sm"
                           >
                             <IconEye className="h-4 w-4" />
                             <span>Details</span>
@@ -310,7 +310,7 @@ export default function DashboardPage() {
                           {canStartBooking(booking.startTime, booking.endTime) && (
                             <button
                               onClick={() => router.push(`/scan/${booking.machineId}`)}
-                              className="flex items-center gap-1 px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded-md text-sm"
+                              className="flex items-center gap-1 px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm"
                             >
                               <IconQrcode className="h-4 w-4" />
                               <span>Scan to Start</span>

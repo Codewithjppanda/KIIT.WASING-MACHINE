@@ -648,7 +648,7 @@ export default function MachinesPage() {
                       
                       {/* Time Slot Selection (same as vacant machines) */}
                       <div className="mb-4">
-                        <label htmlFor={`timeSlot-${machine.id}`} className="text-white mb-2 block">
+                        <label htmlFor={`timeSlot-${machine.id}`} className="text-white mb-2 block rounded-full">
                           Select a future time slot:
                         </label>
                         {getAvailableTimeSlots().length > 0 ? (
@@ -662,7 +662,7 @@ export default function MachinesPage() {
                               }
                             }}
                             value={selectedTimeSlot?.machine === machine.id ? selectedTimeSlot.slot.id : ""}
-                            className="w-full p-2 rounded-md bg-zinc-800 text-white border-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full p-3 rounded-full bg-zinc-800 text-white border-none focus:ring-2 focus:ring-blue-500"
                           >
                             <option value="" disabled>Choose a time</option>
                             {getAvailableTimeSlots().map((slot) => (
@@ -688,7 +688,7 @@ export default function MachinesPage() {
                           }
                         }}
                         disabled={loadingMachineId === machine.id || !selectedTimeSlot || selectedTimeSlot.machine !== machine.id}
-                        className={`w-full py-2 px-4 rounded-md bg-blue-600 text-white hover:bg-blue-700 transition-colors ${
+                        className={`w-full py-2 px-4 rounded-full bg-blue-600 text-white hover:bg-blue-700 transition-colors ${
                           (loadingMachineId === machine.id || !selectedTimeSlot || selectedTimeSlot.machine !== machine.id) 
                             ? 'opacity-50 cursor-not-allowed' 
                             : ''
@@ -715,7 +715,7 @@ export default function MachinesPage() {
                     
                     {/* Time Slot Selection Dropdown (unchanged) */}
                     <div className="mb-4">
-                      <label htmlFor={`timeSlot-${machine.id}`} className="text-white mb-2 block">
+                      <label htmlFor={`timeSlot-${machine.id}`} className="text-white mb-2 block rounded-full">
                         Select a time slot:
                       </label>
                       {getAvailableTimeSlots().length > 0 ? (
@@ -729,7 +729,7 @@ export default function MachinesPage() {
                             }
                           }}
                           value={selectedTimeSlot?.machine === machine.id ? selectedTimeSlot.slot.id : ""}
-                          className="w-full p-2 rounded-md bg-zinc-800 text-white border-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full p-3 rounded-full bg-zinc-800 text-white border-none focus:ring-2 focus:ring-blue-500"
                         >
                           <option value="" disabled>Choose a time</option>
                           {getAvailableTimeSlots().map((slot) => (
@@ -755,7 +755,7 @@ export default function MachinesPage() {
                         }
                       }}
                       disabled={loadingMachineId === machine.id}
-                      className={`w-full py-2 px-4 rounded-md bg-green-600 text-white hover:bg-green-700 transition-colors ${
+                      className={`w-full py-2 px-4 rounded-full bg-green-600 text-white hover:bg-green-700 transition-colors ${
                         loadingMachineId === machine.id ? 'opacity-50 cursor-not-allowed' : ''
                       }`}
                     >

@@ -79,11 +79,11 @@ function VerifyPasswordContent() {
             <Label htmlFor="password">Password</Label>
             <Input
               id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter your password"
-            />
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Enter your password"
+          />
           </div>
           
           {error && (
