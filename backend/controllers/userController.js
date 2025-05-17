@@ -32,9 +32,17 @@ exports.registerUser = async (req, res) => {
             mobileNumber   // ✅ Save mobileNumber too
         });
 
+        // Generate JWT token for newly registered user
+        const token = jwt.sign(
+            { id: user.id, email: user.email, floor: user.floor },
+            process.env.JWT_SECRET,
+            { expiresIn: '1h' }
+        );
+
+        // Return token for immediate authentication
         res.status(201).json({
             message: 'User registered successfully!',
-            user
+            token
         });
 
     } catch (error) {
