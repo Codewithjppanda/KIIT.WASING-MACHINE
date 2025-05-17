@@ -281,3 +281,62 @@ exports.startMachine = async (req, res) => {
         res.status(500).json({ message: 'Server error starting machine' });
     }
 };
+
+exports.getActiveBookings = async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ message: 'Authorization token missing' });
+    }
+
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.id;
+
+    // Get current time
+    const now = new Date();
+
+    console.log(`Fetching active bookings for user ${userId}, current time: ${now.toISOString()}`);
+
+    // Get bookings where end time is in the future (active bookings)
+    const bookings = await Booking.findAll({
+      where: {
+        userId,
+        endTime: { [Op.gt]: now }
+      },
+      include: [{
+        model: Machine,
+        as: 'Machine', // Make sure this matches your model association
+        required: true // Inner join to ensure machine exists
+      }],
+      order: [['startTime', 'ASC']] // Earliest bookings first
+    });
+
+    console.log(`Found ${bookings.length} active bookings`);
+
+    // Format the response
+    const formattedBookings = bookings.map(booking => {
+      const bookingObj = booking.get({ plain: true });
+      return {
+        id: booking.id,
+        machineId: booking.machineId,
+        machine: booking.Machine ? {
+          id: booking.Machine.id,
+          machineNumber: booking.Machine.machineNumber,
+          status: booking.Machine.status
+        } : null,
+        startTime: booking.startTime,
+        endTime: booking.endTime,
+        status: booking.status || 'Booked'
+      };
+    });
+
+    res.status(200).json({
+      bookings: formattedBookings
+    });
+
+  } catch (error) {
+    console.error('Error fetching active bookings:', error);
+    res.status(500).json({ message: 'Server error fetching active bookings' });
+  }
+};

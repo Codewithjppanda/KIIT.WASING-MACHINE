@@ -84,9 +84,12 @@ exports.loginUser = async (req, res) => {
 
 exports.checkEmail = async (req, res) => {
     try {
-        const { email } = req.query;
+        // Handle both query parameters (GET) and body (POST)
+        const email = req.query.email || req.body.email;
+        console.log('Checking email existence:', email);
         
         if (!email) {
+            console.log('No email provided in request');
             return res.status(400).json({ message: 'Email parameter is required' });
         }
 
@@ -95,12 +98,14 @@ exports.checkEmail = async (req, res) => {
         
         if (user) {
             // User exists
+            console.log(`User found for email ${email}`);
             return res.status(200).json({ 
                 exists: true,
                 message: 'User with this email exists' 
             });
         } else {
             // User doesn't exist
+            console.log(`No user found for email ${email}`);
             return res.status(200).json({ 
                 exists: false,
                 message: 'User with this email does not exist' 
@@ -108,7 +113,10 @@ exports.checkEmail = async (req, res) => {
         }
     } catch (error) {
         console.error('Error checking email:', error);
-        res.status(500).json({ message: 'Server error while checking email' });
+        res.status(500).json({ 
+            message: 'Server error while checking email',
+            error: error.message 
+        });
     }
 };
 

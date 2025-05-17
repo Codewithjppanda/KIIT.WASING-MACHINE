@@ -7,6 +7,9 @@ const jwt = require('jsonwebtoken');
 const User = require('./models/User');  // Changed 'user' to 'User' to match actual file casing
 const { DataTypes } = require('sequelize');
 
+// Import model associations - this will set up the relationships
+require('./models/associations');
+
 dotenv.config();
 
 const app = express();
