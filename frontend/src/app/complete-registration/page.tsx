@@ -4,6 +4,9 @@ import { useState } from "react";
 import { useSession, SessionProvider } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { API_BASE_URL } from "@/lib/api";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import Button from "@/components/ui/button";
 
 function CompleteRegistrationContent() {
   const { data: session } = useSession();
@@ -85,85 +88,96 @@ function CompleteRegistrationContent() {
           </div>
         )}
         
-        <form onSubmit={handleSubmit}>
-          <div className="grid grid-cols-2 gap-4 mb-4">
-            <div>
-              <input
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="firstName">First Name</Label>
+              <Input
+                id="firstName"
                 type="text"
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
-                className="form-input"
                 placeholder="First Name"
                 required
               />
             </div>
-            <div>
-              <input
+            <div className="space-y-2">
+              <Label htmlFor="lastName">Last Name</Label>
+              <Input
+                id="lastName"
                 type="text"
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
-                className="w-full p-3 rounded-lg bg-white/10 text-white border border-zinc-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 placeholder="Last Name"
                 required
               />
             </div>
           </div>
           
-          <div className="mb-4">
-            <input
+          <div className="space-y-2">
+            <Label htmlFor="rollNo">Roll Number</Label>
+            <Input
+              id="rollNo"
               type="text"
               value={rollNo}
               onChange={(e) => setRollNo(e.target.value)}
-              className="w-full p-3 rounded-lg bg-white/10 text-white border border-zinc-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="Roll Number"
               required
             />
           </div>
           
-          <div className="mb-4">
-            <input
+          <div className="space-y-2">
+            <Label htmlFor="mobileNumber">Mobile Number</Label>
+            <Input
+              id="mobileNumber"
               type="text"
               value={mobileNumber}
               onChange={(e) => setMobileNumber(e.target.value)}
-              className="w-full p-3 rounded-lg bg-white/10 text-white border border-zinc-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="Mobile Number"
               required
             />
           </div>
           
-          <div className="mb-4">
-            <select
-              value={floor}
-              onChange={(e) => setFloor(e.target.value)}
-              className="w-full p-3 rounded-lg bg-white/10 text-white border border-zinc-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              required
-            >
-              <option value="4th Floor">4th Floor</option>
-              <option value="3rd Floor">3rd Floor</option>
-              <option value="2nd Floor">2nd Floor</option>
-              <option value="1st Floor">1st Floor</option>
-              <option value="Ground Floor">Ground Floor</option>
-            </select>
+          <div className="space-y-2">
+            <Label htmlFor="floor">Hostel Floor</Label>
+            <div className="group/input rounded-lg p-[2px] transition duration-300 bg-blue-500/5 hover:bg-blue-500/10">
+              <select
+                id="floor"
+                value={floor}
+                onChange={(e) => setFloor(e.target.value)}
+                className="shadow-input flex w-full rounded-md border-none bg-gray-50 px-3 py-2 text-sm text-black transition file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-neutral-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-zinc-800 dark:text-white dark:shadow-[0px_0px_1px_1px_#404040] dark:focus-visible:ring-neutral-600"
+                required
+              >
+                <option value="4th Floor">4th Floor</option>
+                <option value="3rd Floor">3rd Floor</option>
+                <option value="2nd Floor">2nd Floor</option>
+                <option value="1st Floor">1st Floor</option>
+                <option value="Ground Floor">Ground Floor</option>
+              </select>
+            </div>
           </div>
           
-          <div className="mb-6">
-            <input
+          <div className="space-y-2">
+            <Label htmlFor="password">Create Password</Label>
+            <Input
+              id="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="form-input"
               placeholder="Create Password"
               required
             />
           </div>
           
-          <button
+          <Button
+            variant="primary"
+            size="lg"
             type="submit"
             disabled={isLoading}
-            className="btn btn-primary"
+            className="w-full mt-6"
           >
             {isLoading ? "Creating Account..." : "Complete Registration"}
-          </button>
+          </Button>
         </form>
       </div>
     </div>

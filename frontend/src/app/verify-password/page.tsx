@@ -4,6 +4,9 @@ import { useState } from "react";
 import { useSession, SessionProvider } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { API_BASE_URL } from "@/lib/api";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import Button from "@/components/ui/button";
 
 function VerifyPasswordContent() {
   const { data: session } = useSession();
@@ -72,13 +75,16 @@ function VerifyPasswordContent() {
         </p>
         
         <form onSubmit={handleSubmit}>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full p-3 rounded-lg bg-white/10 text-white border border-zinc-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 mb-4"
-            placeholder="Enter your password"
-          />
+          <div className="space-y-2 mb-4">
+            <Label htmlFor="password">Password</Label>
+            <Input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter your password"
+            />
+          </div>
           
           {error && (
             <div className="mb-4 p-3 bg-red-500/20 text-red-400 text-sm rounded-lg">
@@ -86,13 +92,15 @@ function VerifyPasswordContent() {
             </div>
           )}
           
-          <button
+          <Button
+            variant="primary"
+            size="lg"
             type="submit"
             disabled={isLoading}
-            className="w-full p-3 rounded-lg bg-blue-500 text-white font-medium hover:bg-blue-600 disabled:opacity-50"
+            className="w-full"
           >
             {isLoading ? "Verifying..." : "Continue"}
-          </button>
+          </Button>
         </form>
         
         <div className="mt-4 text-center">

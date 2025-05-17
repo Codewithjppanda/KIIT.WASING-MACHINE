@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { BackgroundLines } from "@/components/ui/background-lines";
 import { API_BASE_URL } from "@/lib/api";
@@ -12,7 +12,7 @@ import { CountdownCircleTimer } from 'react-countdown-circle-timer';
 
 type Machine = {
   id: string;
-  status: "vacant" | "occupied" | "washing";
+  status: "vacant" | "occupied" | "washing" | "user-booked";
   floor: string;
   name: string; // e.g. "Machine 1"
   booking?: {
@@ -29,6 +29,18 @@ type TimeSlot = {
     endTime: Date;
     label: string;
   };
+};
+
+type ApiBooking = {
+  id: string;
+  machineId: string;
+  machine?: {
+    machineNumber: string | number;
+    status: string;
+  };
+  startTime: string;
+  endTime: string;
+  status?: string;
 };
 
 const BookingSuccess = ({ startTime, endTime, onClose }: { 
@@ -106,6 +118,7 @@ export default function MachinesPage() {
   const [booking, setBooking] = useState<{ machine: string; startTime: Date; endTime: Date } | null>(null);
   const [showBookingSuccess, setShowBookingSuccess] = useState(false);
   const [bookingDetails, setBookingDetails] = useState<{startTime: Date; endTime: Date} | null>(null);
+  const [userBookings, setUserBookings] = useState<{machineId: string; startTime: Date; endTime: Date}[]>([]);
 
   const mapStatusToUI = (status: string) => {
     // Map backend status to frontend status
@@ -127,76 +140,91 @@ export default function MachinesPage() {
       return;
     }
 
-    const fetchMachinesData = async () => {
-      try {
-        // Fetch machines
-        const machinesResponse = await fetch(`${API_BASE_URL}/api/users/machines/status`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
-        });
+    // Load existing booking from localStorage and clear if expired
+    const loadLocalBooking = () => {
+      const bm = localStorage.getItem("bookingMachineId");
+      const bs = localStorage.getItem("bookingStartTime");
+      const be = localStorage.getItem("bookingEndTime");
+      
+      if (bm && bs && be) {
+        // Compute current IST time
+        const localNow = new Date();
+        const utcMs = localNow.getTime() + localNow.getTimezoneOffset() * 60000;
+        const nowIST = new Date(utcMs + 5.5 * 60 * 60000);
+        const startDate = new Date(bs);
+        const endDate = new Date(be);
         
-        if (!machinesResponse.ok) {
-          throw new Error("Failed to fetch machines");
-        }
-        
-        const machinesData = await machinesResponse.json();
-        console.log("Machine data received:", machinesData);
-
-        // Transform data to match expected format
-        const transformedMachines = (machinesData.machines || []).map((machine: {
-          id: string;
-          machineNumber: number | string;
-          status: string;
-          booking?: {
-            startTime: Date | string;
-            endTime: Date | string;
-          };
-        }) => ({
-          id: machine.id,
-          status: mapStatusToUI(machine.status),
-          floor: localStorage.getItem("userFloor") || userFloor,
-          name: `Machine ${machine.id}`,
-          booking: machine.booking
-        }));
-
-        console.log("Transformed machines:", transformedMachines);
-        setMachines(transformedMachines);
-      } catch (error) {
-        console.error("User fetch error details:", error);
-        // Fall back to localStorage data if available
-        const floorFromStorage = localStorage.getItem("userFloor");
-        if (floorFromStorage) {
-          setUserFloor(floorFromStorage);
-          console.log("Using floor from localStorage:", floorFromStorage);
+        if (nowIST > endDate) {
+          // Booking window expired, clear booking
+          localStorage.removeItem("bookingMachineId");
+          localStorage.removeItem("bookingStartTime");
+          localStorage.removeItem("bookingEndTime");
+          setBooking(null);
         } else {
-          throw error; // Rethrow if we can't recover
+          setBooking({ machine: bm, startTime: startDate, endTime: endDate });
+          console.log("Loaded booking from localStorage:", { machine: bm, startTime: startDate, endTime: endDate });
         }
-      } finally {
-        setLoading(false);
       }
     };
-
-    fetchMachinesData();
-    // Load existing booking from localStorage and clear if expired
-    const bm = localStorage.getItem("bookingMachineId");
-    const bs = localStorage.getItem("bookingStartTime");
-    const be = localStorage.getItem("bookingEndTime");
-    if (bm && bs && be) {
-      // Compute current IST time
-      const localNow = new Date();
-      const utcMs = localNow.getTime() + localNow.getTimezoneOffset() * 60000;
-      const nowIST = new Date(utcMs + 5.5 * 60 * 60000);
-      const startDate = new Date(bs);
-      const endDate = new Date(be);
-      if (nowIST > endDate) {
-        // Booking window expired, clear booking
-        localStorage.removeItem("bookingMachineId");
-        localStorage.removeItem("bookingStartTime");
-        localStorage.removeItem("bookingEndTime");
-        setBooking(null);
-      } else {
-        setBooking({ machine: bm, startTime: startDate, endTime: endDate });
+    
+    const fetchUserBookings = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+        
+        const response = await fetch(`${API_BASE_URL}/api/users/bookings/active`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.bookings && data.bookings.length > 0) {
+            // Transform all active bookings
+            const activeBookings = data.bookings.map((b: ApiBooking) => ({
+              machineId: b.machineId,
+              startTime: new Date(b.startTime),
+              endTime: new Date(b.endTime)
+            }));
+            
+            setUserBookings(activeBookings);
+            console.log("Loaded user bookings from API:", activeBookings);
+            
+            // Use the most recent booking
+            const latestBooking = data.bookings[0];
+            const startDate = new Date(latestBooking.startTime);
+            const endDate = new Date(latestBooking.endTime);
+            
+            // Set the booking from API data
+            setBooking({ 
+              machine: latestBooking.machineId, 
+              startTime: startDate, 
+              endTime: endDate 
+            });
+            
+            // Also update localStorage
+            localStorage.setItem("bookingMachineId", latestBooking.machineId);
+            localStorage.setItem("bookingStartTime", startDate.toISOString());
+            localStorage.setItem("bookingEndTime", endDate.toISOString());
+          }
+        } else {
+          // If API fails, fall back to localStorage
+          loadLocalBooking();
+        }
+      } catch (error) {
+        console.error("Error fetching user bookings:", error);
+        // Fall back to localStorage
+        loadLocalBooking();
       }
-    }
+    };
+    
+    // First fetch machines, then fetch bookings
+    const fetchData = async () => {
+      await fetchMachinesData();
+      await fetchUserBookings();
+      setLoading(false);
+    };
+    
+    fetchData();
   }, [router]);
 
   const fetchMachinesData = async () => {
@@ -342,13 +370,58 @@ export default function MachinesPage() {
     }
   };
 
-  // Include only vacant machines or the one the user just booked (for scan)
-  const availableMachines = machines.filter(machine => {
-    const isAvailable = machine.status === 'vacant';
-    const isBooked = booking?.machine === machine.id;
-    console.log(`Machine ${machine.id} status=${machine.status} isBooked=${isBooked}`);
-    return isAvailable || isBooked;
-  });
+  // Transform machines for display, ensuring booked machines appear
+  const prepareDisplayMachines = () => {
+    if (!machines.length) return [];
+    
+    // Create a copy of machines to avoid modifying the original
+    const displayMachines = [...machines];
+    
+    // Find machines that aren't in the list but are booked by the user
+    userBookings.forEach(userBooking => {
+      // Check if booked machine is already in our list
+      const machineExists = displayMachines.some(m => m.id === userBooking.machineId);
+      
+      if (!machineExists) {
+        // Add the booked machine to the display list
+        displayMachines.push({
+          id: userBooking.machineId,
+          status: 'user-booked', // Special status for our UI logic
+          floor: userFloor,
+          name: `Machine ${userBooking.machineId}`,
+          booking: {
+            startTime: userBooking.startTime,
+            endTime: userBooking.endTime
+          }
+        });
+        console.log(`Added missing booked machine ${userBooking.machineId} to display list`);
+      }
+    });
+    
+    return displayMachines;
+  };
+
+  // Filter machines to show
+  const availableMachines = useMemo(() => {
+    const displayMachines = prepareDisplayMachines();
+    
+    return displayMachines.filter(machine => {
+      const isAvailable = machine.status === 'vacant';
+      
+      // Check if machine is booked by user (from current booking)
+      const isCurrentBooking = booking?.machine === machine.id;
+      
+      // Check if machine is in user's bookings list
+      const isUserBooked = userBookings.some(b => b.machineId === machine.id);
+      
+      // Special status we added for missing machines
+      const isUserBookedStatus = machine.status === 'user-booked';
+      
+      console.log(`Machine ${machine.id} status=${machine.status} isAvailable=${isAvailable} isBooked=${isCurrentBooking || isUserBooked}`);
+      
+      return isAvailable || isCurrentBooking || isUserBooked || isUserBookedStatus;
+    });
+  }, [machines, booking, userBookings, userFloor]);
 
   // Determine if the user can book (for today or tomorrow) based on Indian Standard Time
   const canFloorBookToday = (floor: string): { canBook: boolean, isDayBefore: boolean } => {
@@ -515,22 +588,31 @@ export default function MachinesPage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {availableMachines.map(machine => {
-                if (booking?.machine === machine.id) {
-                  const scanState = getScanButtonState(booking.startTime, booking.endTime);
+                // Find if this machine is in any of the user's bookings
+                const userBooking = userBookings.find(b => b.machineId === machine.id);
+                
+                // Use either booking from state, or from userBookings list
+                const bookingToUse = 
+                  (booking?.machine === machine.id) ? booking : 
+                  userBooking ? { machine: userBooking.machineId, startTime: userBooking.startTime, endTime: userBooking.endTime } :
+                  null;
+                
+                if (bookingToUse) {
+                  const scanState = getScanButtonState(bookingToUse.startTime, bookingToUse.endTime);
                   return (
                     <motion.div
                       key={machine.id}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="bg-zinc-900/80 rounded-xl p-6 border border-green-500/20"
+                      className="bg-zinc-900/80 rounded-xl p-6 border border-blue-500/20"
                     >
                       <div className="flex items-center mb-4">
                         <div className="w-3 h-3 rounded-full bg-blue-500 mr-2"></div>
                         <h3 className="text-white font-medium">{machine.name}</h3>
                       </div>
                       <p className="text-neutral-400 mb-4">
-                        Booked for {booking.startTime.toLocaleDateString()}, 
-                        {booking.startTime.toLocaleTimeString()} - {booking.endTime.toLocaleTimeString()}
+                        Booked for {bookingToUse.startTime.toLocaleDateString()}, 
+                        {bookingToUse.startTime.toLocaleTimeString()} - {bookingToUse.endTime.toLocaleTimeString()}
                       </p>
                       
                       {scanState.timeLeft > 0 && <ScanningStatus timeLeft={scanState.timeLeft} />}
@@ -547,14 +629,15 @@ export default function MachinesPage() {
                     </motion.div>
                   );
                 }
-                // Booking not for this machine: show time slot and Book Now
+                
+                // Render vacant machine (same as before)
                 return (
-                <div key={machine.id} className="bg-zinc-900/80 rounded-xl p-6 border border-green-500/20">
-                  <div className="flex items-center mb-4">
-                    <div className="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
-                    <h3 className="text-white font-medium">{machine.name}</h3>
-                  </div>
-                  <p className="text-neutral-400 mb-4">Status: Available</p>
+                  <div key={machine.id} className="bg-zinc-900/80 rounded-xl p-6 border border-green-500/20">
+                    <div className="flex items-center mb-4">
+                      <div className="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
+                      <h3 className="text-white font-medium">{machine.name}</h3>
+                    </div>
+                    <p className="text-neutral-400 mb-4">Status: Available</p>
                     
                     {/* Time Slot Selection Dropdown */}
                     <div className="mb-4">
@@ -591,7 +674,7 @@ export default function MachinesPage() {
                       )}
                     </div>
                     
-                  <button
+                    <button
                       onClick={() => {
                         if (selectedTimeSlot?.machine === machine.id) {
                           handleBookMachine(machine.id, selectedTimeSlot.slot.startTime, selectedTimeSlot.slot.endTime);
@@ -601,14 +684,14 @@ export default function MachinesPage() {
                       }}
                       disabled={loadingMachineId === machine.id}
                       className={`btn btn-secondary ${loadingMachineId === machine.id ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  >
+                    >
                       {loadingMachineId === machine.id ? (
                         <div className="mx-auto h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                       ) : (
                         'Book Now'
                       )}
-                  </button>
-                </div>
+                    </button>
+                  </div>
                 );
               })}
             </div>
