@@ -103,6 +103,8 @@ npm install
 
 ### 2) Backend Environment (`backend/.env`)
 
+Use placeholder values locally and never commit real secrets (DB credentials, JWT secrets, OAuth secrets, email passwords) to version control.
+
 ```env
 DB_HOST=your-db-host
 DB_PORT=3306
@@ -122,6 +124,8 @@ EMAIL_PASSWORD=your-email-app-password
 ```
 
 ### 3) Frontend Environment (`frontend/.env.local`)
+
+Use strong, randomly generated values for production secrets (especially `NEXTAUTH_SECRET`) and keep them in secure environment configuration.
 
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:5000
