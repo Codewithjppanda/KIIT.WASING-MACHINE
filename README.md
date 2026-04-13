@@ -69,7 +69,7 @@ KIIT-WASHING-MACHINE/
 ### 2) Machine Booking Workflow
 - Fetch machine availability/status
 - Book slot with policy validation:
-  - Allowed booking window: 10 AM to 6 PM (IST)
+  - Allowed booking window: 10 AM to 6 PM (Asia/Kolkata, UTC+5:30)
   - Fixed slot duration: 55 minutes (45 wash + 10 buffer)
   - Floor-based allowed booking days
   - Previous-day timing restriction handling
