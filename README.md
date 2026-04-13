@@ -178,16 +178,16 @@ Backend health check: `http://localhost:5000/api/health`
 
 ## API Surface (High-Level)
 
-Base: `/api/users`
+User-related base: `/api/users`
 
-- `POST /register`
-- `POST /login`
-- `POST /check-email`
-- `GET /me`
-- `GET /washes-left`
-- `POST /book`
-- `GET /bookings/active`
-- `POST /start/:machineId`
+- `POST /api/users/register`
+- `POST /api/users/login`
+- `POST /api/users/check-email`
+- `GET /api/users/me`
+- `GET /api/users/washes-left`
+- `POST /api/users/book`
+- `GET /api/users/bookings/active`
+- `POST /api/users/start/:machineId`
 
 Global:
 - `GET /api/health`
