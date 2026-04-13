@@ -69,14 +69,14 @@ KIIT-WASHING-MACHINE/
 ### 2) Machine Booking Workflow
 - Fetch machine availability/status
 - Book slot with policy validation:
-  - Allowed booking window: 10 AM to 6 PM (Asia/Kolkata, UTC+5:30)
+  - Allowed booking window: 10 AM to 6 PM (Asia/Kolkata, UTC+05:30)
   - Fixed slot duration: 55 minutes (45 wash + 10 buffer)
   - Floor-based allowed booking days
   - Previous-day timing restriction handling
 - Prevents overlapping bookings on same machine
 
 ### 3) Session Start & Tracking
-- Start machine by scanning QR flow (`/scan/[machineId]`)
+- Start machine by scanning QR flow on frontend (`/scan/[machineId]`), which triggers backend start API (`/api/users/start/:machineId`)
 - Active booking retrieval for dashboard
 - Wash credit deduction per successful booking
 
@@ -126,6 +126,7 @@ EMAIL_PASSWORD=your-email-app-password
 ### 3) Frontend Environment (`frontend/.env.local`)
 
 Use strong, randomly generated values for production secrets (especially `NEXTAUTH_SECRET`) and keep them in secure environment configuration.
+Example (Linux/macOS): `openssl rand -base64 32`
 
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:5000
