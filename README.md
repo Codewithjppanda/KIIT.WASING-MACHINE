@@ -51,7 +51,7 @@ For operations, it reduces conflicts and manual coordination by enforcing bookin
 ## Repository Structure
 
 ```text
-KIIT.WASING-MACHINE/
+KIIT-WASHING-MACHINE/
 ├── frontend/   # Next.js client application
 └── backend/    # Express + Sequelize API server
 ```
